@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PopCat Recipes</title>
+    <!-- Load Google Font: Inter (Used in CSS) --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define the custom color from the image and Inter font */
+        :root {
+            --popcat-bg: #D9BBB2; /* Muted rosy brown - Main Background */
+            --popcat-dark: #000000;
+            --popcat-accent: #E57373; /* A soft, warm pink/red - Primary Accent */
+            --popcat-secondary: #B8E1D9; /* Dusty Teal - Complementary Accent */
+            --popcat-light-card: #F9F5F4; /* Very light version of --popcat-bg */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* Container simulating a mobile phone screen */
+        .phone-screen {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 800px;
+            background-color: var(--popcat-bg, white);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Styles for screen transitions */
+        .screen {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            transition: opacity 0.3s ease-in-out;
+            background-color: var(--popcat-bg, white);
+            overflow: hidden;
+            flex-direction: column;
+        }
+        .screen.active {
+             display: flex;
+        }
+        /* Utility classes for the form cards */
+        .form-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #374151;
+            transition: border-color 0.15s ease-in-out;
+        }
+        /* NEW: Style for invalid input fields */
+        .input-field.border-red-500 {
+            border-color: #EF4444;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #374151;
+            box-shadow: 0 0 0 1px #374151;
+        }
+        /* Form Styles from recipe_form_screen.html, integrated */
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: #1F2937;
+            background-color: #FFFFFF;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--popcat-accent);
+            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
+        }
+         /* Style for select dropdown arrow */
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3csvg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        /* Custom Sort Select Styling */
+        #sort-select {}
+        /* Styling for the fixed header in the main feed */
+        .feed-header {
+            height: 60px;
+            border-bottom: 3px solid var(--popcat-accent);
+            background-color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        /* General Header Style (for other screens like detail, form) */
+        .header {
+            background-color: #FFFFFF;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 1rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            height: 60px;
+        }
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--popcat-accent);
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            color: #4B5563;
+            flex-shrink: 0;
+            line-height: 0;
+        }
+        .icon-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+        .icon-btn:hover {
+            background-color: #F3F4F6;
+            color: #1F2937;
+        }
+        .btn-header-save {
+             background: none;
+             color: var(--popcat-accent);
+             font-weight: 600;
+             padding: 0.5rem 1rem;
+             font-size: 0.9rem;
+             border-radius: 6px;
+             border: 1px solid transparent;
+        }
+         .btn-header-save:hover:not(:disabled) {
+             background-color: #FEE2E2;
+             border-color: var(--popcat-accent);
+         }
+        .btn-header-save:disabled {
+            color: #9CA3AF;
+            background: none;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* Recipe card styling */
+        .recipe-card {
+            background-color: var(--popcat-light-card, white); 
+            border-radius: 12px;
+            box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--popcat-secondary, rgba(184, 225, 217, 0.3));
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+        }
+        .recipe-card:hover {
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15), 0 0 0 3px var(--popcat-secondary, rgba(184, 225, 217, 0.3));
+            transform: translateY(-4px);
+        }
+        .recipe-card:active {
+            transform: scale(0.95);
+        }
+        /* Recipe card image */
+        .recipe-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        /* Style for the category tag */
+        .recipe-tag {
+            background-color: var(--popcat-accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        /* REFINED: Recipe Card Title */
+        .recipe-card .recipe-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--popcat-accent);
+        }
+        /* REFINED: Recipe Card Metadata (Author, Time) */
+        .recipe-card .recipe-author, 
+        .recipe-card .recipe-metadata-time {
+            color: var(--popcat-secondary);
+            font-weight: 600;
+        }
+        /* Custom CSS for the Sliding Drawer Menu (FIXED FOR MOBILE CONFINEMENT) */
+        .drawer {
+            position: absolute; 
+            top: 0;
+            left: 0;
+            width: 85%; 
+            max-width: 300px;
+            height: 100%;
+            background-color: var(--popcat-bg, white);
+            z-index: 50; 
+            transform: translateX(-105%);
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .drawer.open {
+            transform: translateX(0);
+        }
+        .drawer-overlay {
+            position: absolute; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40; 
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+        }
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease-in-out;
+        }
+        /* Custom class for Recipe Card Avatar Rings */
+        .card-avatar-accent {
+            border: 2px solid var(--popcat-accent);
+        }
+        .card-avatar-secondary {
+            border: 2px solid var(--popcat-secondary);
+        }
+        .drawer-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+            color: var(--popcat-dark); 
+        }
+        .drawer-item:hover {
+            background-color: rgba(184, 225, 217, 0.4);
+        }
+         /* Style for the Sign Out item override */
+        .drawer-item.sign-out-item:hover {
+            background-color: #FEE2E2;
+        }
+        /* Style for the Add Recipe button (FAB) */
+        .fab {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--popcat-accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.15s, transform 0.1s;
+            z-index: 20;
+            border: none;
+        }
+        .fab:hover {
+            background-color: #d85f5f;
+        }
+        .fab:active {
+            transform: scale(0.95);
+        }
+        /* Loading Spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--popcat-accent);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* NEW: Pulse animation for skeleton loading */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        /* NEW: Inline Error Styling */
+        .input-error-msg {
+            color: #EF4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            height: 1rem;
+            display: block;
+            overflow: hidden;
+        }
+        /* Message Box Styling */
+        #message-box {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+        }
+        #message-box.show {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease;
+        }
+        #message-box.error {
+            background-color: rgba(220, 38, 38, 0.9);
+        }
+        #message-box.success {
+            background-color: rgba(22, 163, 74, 0.9);
+        }
+        /* UPDATED: Styles for Confirmation Modal */
+        #message-box .confirm-buttons {
+            display: none;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        #message-box.confirm .confirm-buttons {
+            display: flex;
+            justify-content: center;
+        }
+        #message-box .ok-button {
+             padding: 0.5rem 1rem;
+             font-size: 0.875rem;
+        }
+        /* Custom Button classes for confirm modal */
+        .btn-danger {
+            background-color: #DC2626;
+            color: white;
+            border-color: #DC2626;
+        }
+        .btn-danger:hover {
+            background-color: #B91C1C;
+        }
+         /* Recipe Card Actions (for My Recipes) */
+        .recipe-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            border-top: 1px solid #eee;
+            padding-top: 0.75rem;
+        }
+        .action-btn {
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .edit-btn {
+             background-color: #DBEAFE;
+             color: #1D4ED8;
+             border: 1px solid #BFDBFE;
+        }
+        .edit-btn:hover { background-color: #BFDBFE; }
+        .delete-btn {
+            background-color: #FEE2E2;
+            color: #B91C1C;
+            border: 1px solid #FECACA;
+        }
+        .delete-btn:hover { background-color: #FECACA; }
+        /* Specific background for login/register screens */
+        #login-1, #login-2 {
+            background-color: var(--popcat-bg);
+        }
+        /* Specific background for main feed content */
+        #main-feed, #my-recipes-screen, #favorites-screen {
+             background-color: var(--popcat-bg);
+        }
+        /* Other screens default to white unless specified */
+        #recipe-detail, #recipe-form-screen {
+            background-color: white;
+        }
+        /* NEW: Class for login titles to make them pop */
+        .login-title-pop {
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        /* NEW: Styles for the black footer/header in the drawer */
+        .drawer-dark-bar {
+            background-color: var(--popcat-dark); 
+            color: var(--popcat-accent);
+            padding: 1rem;
+            flex-shrink: 0;
+        }
+        /* NEW: Style for the scrollable menu content area */
+        .drawer-menu-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: var(--popcat-light-card);
+        }
+        /* Styles for the Sort Dropdown */
+        .sort-select-container {
+             flex-shrink: 0;
+             padding: 0 0.5rem;
+             display: flex;
+             align-items: center;
+        }
+        #sort-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234B5563'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 9l4-4 4 4m0 6l-4 4-4-4'/%3e%3csvg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1rem 1rem;
+            padding-right: 1.5rem;
+            cursor: pointer;
+            border-color: var(--popcat-secondary);
+        }
+        /* NEW: Category Filter Bar Styling */
+        .filter-bar {
+            background-color: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 0.5rem 0;
+            overflow-x: auto;
+            flex-shrink: 0;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-button {
+            display: inline-block;
+            margin: 0 0.5rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid var(--popcat-secondary);
+            background-color: white;
+            color: var(--popcat-dark);
+        }
+        .filter-button:hover {
+            background-color: var(--popcat-secondary);
+            color: var(--popcat-dark);
+        }
+        .filter-button.active {
+            background-color: var(--popcat-accent);
+            border-color: var(--popcat-accent); 
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .filter-button:first-child {
+             margin-left: 1rem;
+        }
+        .filter-button:last-child {
+             margin-right: 1rem;
+        }
+        /* NEW: Ingredient Checklist Styling */
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+        .ingredient-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            min-height: 18px;
+            accent-color: var(--popcat-accent);
+        }
+        /* Hides the detail content when loading spinner is visible */
+        #recipe-detail.loading .detail-content {
+            display: none;
+        }
+        /* Shows the loading spinner when active */
+        #recipe-detail .detail-loading-overlay {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #recipe-detail.loading .detail-loading-overlay {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container" class="phone-screen">
+        <!-- DRAWER MENU OVERLAY (Click to close) -->
+        <div id="drawer-overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+        <!-- DRAWER MENU -->
+        <div id="drawer-menu" class="drawer flex flex-col">
+            <!-- Menu Items - Scrollable Content Area -->
+            <div class="drawer-menu-content pt-2">
+                <div onclick="showScreen('main-feed'); toggleDrawer(false);" class="drawer-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6-4a1 1 0 001-1v-1a1 1 0 10-2 0v1a1 1 0 001 1z"></path></svg>
+                    <span>Home Feed</span>
+                </div>
+                 <div id="drawer-add-recipe-btn" class="drawer-item">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span>Add New Recipe</span>
+                </div>
+                 <div id="drawer-my-recipes-btn" class="drawer-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20a7.92 7.92 0 0 0 3-1"/><path d="m14 20 2-2 4 4"/><path d="M17 12h.01"/></svg>
+                    <span>My Recipes</span>
+                </div>
+                <div onclick="handleFavoritesClick()" class="drawer-item">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    <span>Favorites</span>
+                </div>
+                <div class="h-px bg-gray-200 my-2 mx-4"></div>
+                <!-- Footer Section (Sign Out) -->
+                <div onclick="handleSignOut()" class="drawer-item sign-out-item text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    <span class="font-medium">Sign Out</span>
+                </div>
+            </div>
+            <!-- Footer Section (Black Bar) -->
+            <div class="drawer-dark-bar flex flex-col justify-end space-y-1">
+                <!-- User Info Section -->
+                <div class="flex items-start">
+                     <div class="w-10 h-10 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center mr-3 flex-shrink-0">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-800" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <!-- Text elements -->
+                    <div class="flex flex-col overflow-hidden">
+                        <p id="drawer-username" class="font-bold text-base whitespace-nowrap overflow-hidden text-ellipsis" style="color: var(--popcat-accent);">Guest User</p> 
+                        <p id="drawer-user-email" class="text-sm whitespace-nowrap overflow-hidden text-ellipsis" style="color: var(--popcat-secondary);">Guest User</p>
+                        <p id="drawer-user-id" class="text-xs opacity-80 whitespace-nowrap overflow-hidden text-ellipsis" style="color: var(--popcat-secondary);">ID: Not Signed In</p> 
+                        <p id="drawer-recipe-count" class="text-xs opacity-80 whitespace-nowrap overflow-hidden text-ellipsis" style="color: var(--popcat-secondary);">Recipes: 0</p>
+                    </div>
+                </div>
+                <!-- Version/Legal Footer -->
+                <p class="text-xs pt-2" style="color: var(--popcat-accent);">PopCat Recipes v1.3</p>
+            </div>
+        </div>
+        <!-- 1. LOADING SCREEN 1 (Large Logo + Full Text) -->
+        <div id="loading-1" class="screen flex flex-col justify-center items-center p-8 text-center" style="background-color: var(--popcat-bg);">
+            <div class="space-y-4">
+                 <img src="popcat_full.png"
+                     onerror="this.onerror=null; this.src='https://placehold.co/96x96/000000/FFFFFF?text=POP'"
+                     alt="PopCat Logo" class="w-24 h-auto mx-auto" />
+                <div class="text-xs tracking-widest text-black/80 font-medium">
+                    "YOUR FRIENDLY NEIGHBORHOOD CAT"
+                </div>
+            </div>
+        </div>
+        <!-- 2. LOADING SCREEN 2 (Small Logo, Spinning) -->
+        <div id="loading-2" class="screen flex justify-center items-center" style="background-color: var(--popcat-bg);">
+             <div class="flex flex-col items-center">
+                 <img src="popcat_full.png"
+                      onerror="this.onerror=null; this.src='https://placehold.co/64x64/000000/FFFFFF?text=POP'"
+                      alt="PopCat Logo" class="w-16 h-auto animate-spin" style="animation-duration: 1.5s;"/>
+            </div>
+        </div>
+        <!-- 3. LOADING SCREEN 4 (Icon + Meow) -->
+        <div id="loading-4" class="screen flex justify-center items-center" style="background-color: var(--popcat-bg);">
+            <div class="flex items-center space-x-2">
+                 <img src="popcat_icon.png"
+                      onerror="this.onerror=null; this.src='https://placehold.co/32x32/D9BBB2/000000?text=P'"
+                      alt="PopCat Outline Logo" class="w-8 h-8" />
+                <div class="text-3xl font-bold tracking-tight text-black">Meow</div>
+            </div>
+        </div>
+        <!-- 4. LOGIN SCREEN 1 (Sign In) -->
+        <div id="login-1" class="screen pt-16 px-8 flex flex-col items-center" style="background-color: var(--popcat-bg);">
+            <!-- Header/Logo -->
+            <div class="flex items-center space-x-2 mb-2">
+                <img src="popcat_icon.png"
+                     onerror="this.onerror=null; this.src='https://placehold.co/32x32/D9BBB2/000000?text=P'"
+                     alt="PopCat Outline Logo" class="w-12 h-12" />
+                <h1 class="text-3xl font-bold login-title-pop" style="color: var(--popcat-accent);">PopCat Recipes</h1>
+            </div>
+            <hr class="w-full max-w-xs border-t-4 mb-8" style="border-color: var(--popcat-dark);">
+            <!-- Sign In Form Card -->
+            <div class="form-card w-full p-6 space-y-4">
+                <div>
+                    <label for="email-in" class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email-in" placeholder="email" class="input-field" />
+                    <span id="error-email-in" class="input-error-msg"></span>
+                </div>
+                <div>
+                    <label for="password-in" class="block text-xs font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password-in" placeholder="password" class="input-field" />
+                    <span id="error-password-in" class="input-error-msg"></span>
+                </div>
+                <!-- CORRECTED LOGIN BUTTON -->
+                <button id="login-btn" type="button"
+                        class="w-full py-2 bg-gray-900 text-white font-semibold rounded-lg shadow-xl hover:bg-black transition duration-150">
+                    Sign in
+                </button>
+                <a href="javascript:void(0)" id="forgot-password-link" 
+                   class="block text-center text-xs hover:underline mt-2"
+                   style="color: var(--popcat-accent);">
+                    Forgot password?
+                </a>
+            </div>
+            <!-- CORRECTED REGISTER BUTTON -->
+            <button id="show-register-btn" type="button"
+                    class="mt-6 py-2 px-6 bg-gray-700 text-white text-sm font-medium rounded-lg shadow-xl hover:bg-gray-800 transition duration-150">
+                Register
+            </button>
+            <p id="login-status" class="text-center text-sm mt-4 h-4" style="color: var(--popcat-accent);"></p>
+        </div>
+        <!-- 5. LOGIN SCREEN 2 (Sign Up) -->
+        <div id="login-2" class="screen pt-16 px-8 flex flex-col items-center" style="background-color: var(--popcat-bg);">
+            <!-- Header/Logo -->
+            <div class="flex items-center space-x-2 mb-2">
+                 <img src="popcat_icon.png"
+                      onerror="this.onerror=null; this.src='https://placehold.co/32x32/D9BBB2/000000?text=P'"
+                      alt="PopCat Outline Logo" class="w-12 h-12" />
+                <h1 class="text-3xl font-bold login-title-pop" style="color: var(--popcat-accent);">PopCat Recipes</h1>
+            </div>
+            <hr class="w-full max-w-xs border-t-4 mb-8" style="border-color: var(--popcat-dark);">
+            <!-- Sign Up Form Card -->
+            <div class="form-card w-full p-6 space-y-4">
+                 <div>
+                    <label for="username-up" class="block text-xs font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="username-up" placeholder="choose a username" class="input-field" required />
+                    <span id="error-username-up" class="input-error-msg"></span>
+                </div>
+                <div>
+                    <label for="email-up" class="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email-up" placeholder="enter a valid email" class="input-field" required />
+                    <span id="error-email-up" class="input-error-msg"></span>
+                </div>
+                <div>
+                    <label for="password-up" class="block text-xs font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password-up" placeholder="enter new password (min 6 chars)" class="input-field" required />
+                    <span id="error-password-up" class="input-error-msg"></span>
+                </div>
+                <div>
+                    <label for="confirm-password-up" class="block text-xs font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input type="password" id="confirm-password-up" placeholder="confirm new password" class="input-field" required />
+                    <span id="error-confirm-password-up" class="input-error-msg"></span>
+                </div>
+                <!-- CORRECTED SIGN UP BUTTON -->
+                <button id="register-btn" type="button"
+                        class="w-full py-2 bg-gray-900 text-white font-semibold rounded-lg shadow-xl hover:bg-black transition duration-150">
+                    Sign up
+                </button>
+                <p id="register-status" class="text-center text-sm mt-2 h-4" style="color: var(--popcat-accent);"></p>
+            </div>
+            <!-- CORRECTED BACK TO LOGIN BUTTON -->
+            <button id="show-login-btn" type="button"
+                    class="mt-6 text-sm hover:underline"
+                    style="color: var(--popcat-accent);">
+                Already have an account? Sign in
+            </button>
+        </div>
+        <!-- 6. MAIN RECIPE FEED SCREEN -->
+        <div id="main-feed" class="screen flex flex-col bg-gray-100">
+            <!-- Fixed Header (Themed with Accent Border) -->
+            <div class="feed-header bg-white shadow-lg sticky top-0 z-10">
+                <!-- Menu Button -->
+                <button id="open-drawer-btn" class="icon-btn mr-3"> 
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+                </button>
+                <!-- Title using the Accent Color -->
+                <h1 class="text-lg font-bold" style="color: var(--popcat-accent);">PopCat Recipes</h1>
+                <!-- NEW: Sort Dropdown Menu -->
+                <div class="sort-select-container">
+                    <label for="sort-select" class="text-xs text-gray-500 font-medium mr-1 hidden sm:inline">Sort:</label>
+                    <select id="sort-select" class="text-xs bg-white border py-1 pl-2 pr-5 rounded-full shadow-sm text-gray-700">
+                        <option value="date-desc">Newest</option>
+                        <option value="date-asc">Oldest</option>
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="prep-asc">Prep Time (Fastest)</option>
+                    </select>
+                </div>
+                <!-- Search/Notification Icon (Placeholder) -->
+                <button id="search-button" class="icon-btn text-gray-500 hover:text-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+                </button>
+            </div>
+             <!-- Search Bar (hidden by default) -->
+            <div id="search-bar-container" class="p-4 bg-white border-b border-gray-200 hidden">
+                <input id="search-input" type="text" placeholder="Search for recipes..." class="form-input w-full">
+            </div>
+            <!-- NEW: Filter Bar for Main Feed -->
+            <div id="feed-filter-bar" class="filter-bar">
+                 <!-- Buttons generated by JavaScript -->
+            </div>
+            <!-- Scrollable Content Area: Recipe cards -->
+            <div id="recipe-feed-container" class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
+                <!-- Loading indicator (kept but hidden if skeleton is active) -->
+                <div id="feed-loading" class="flex justify-center items-center py-10 hidden">
+                    <div class="loading-spinner"></div>
+                </div>
+                <!-- NEW: Skeleton container - starts hidden, shown by JS on load -->
+                <div id="skeleton-feed-container" class="space-y-4 hidden">
+                    <!-- Skeletons go here (Generated by JS) -->
+                </div>
+                <!-- Recipe cards will be inserted here by JavaScript -->
+                <p id="feed-empty-state" class="text-center text-gray-500 pt-12 hidden">No recipes found yet!</p>
+            </div>
+            <!-- Floating Action Button (FAB) for adding new recipes -->
+            <button id="main-add-recipe-fab" class="fab">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            </button>
+        </div>
+        <!-- 7. RECIPE DETAIL SCREEN -->
+        <div id="recipe-detail" class="screen flex flex-col bg-white">
+            <!-- Fixed Header -->
+            <div class="header">
+                <button id="detail-back-btn" class="icon-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <h1 id="detail-recipe-title-header" class="header-title truncate">Recipe Details</h1>
+                <!-- Optional: Add Share/Like button here -->
+                <button id="favorite-btn" class="icon-btn text-gray-500 hover:text-red-500">
+                     <!-- Heart Icon (will be filled red if favorited) -->
+                     <svg id="favorite-icon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </button>
+            </div>
+             <!-- NEW: Detail Loading Spinner Overlay -->
+            <div id="detail-loading-overlay" class="detail-loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto detail-content">
+                <!-- Recipe Image -->
+                <div class="relative h-56 overflow-hidden bg-gray-200">
+                    <img id="detail-recipe-image" src="https://placehold.co/400x224/D9BBB2/000000?text=Recipe" alt="Recipe Image" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x224/cccccc/333333?text=No+Image'" />
+                </div>
+                <div class="p-4 space-y-6">
+                    <!-- Title and Author -->
+                    <div>
+                        <h2 id="detail-recipe-title" class="text-2xl font-bold text-gray-900 mb-1">Recipe Title Loading...</h2>
+                        <div class="flex items-center text-sm text-gray-600">
+                             <img id="detail-chef-avatar" src="https://placehold.co/30x30/cccccc/FFFFFF?text=?" alt="Chef Avatar" class="w-7 h-7 rounded-full mr-2 border-2 border-gray-300" />
+                            <span id="detail-chef-name" class="font-medium">Loading...</span>
+                        </div>
+                    </div>
+                    <!-- Stats -->
+                    <div class="flex justify-around text-center border border-gray-200 rounded-xl p-3 shadow-sm bg-white">
+                        <div class="flex flex-col items-center px-2">
+                            <span id="detail-prep-time" class="font-bold text-gray-900">--</span>
+                            <span class="text-xs text-gray-500">Prep</span>
+                        </div>
+                        <div class="w-px bg-gray-200"></div>
+                         <div class="flex flex-col items-center px-2">
+                            <span id="detail-cook-time" class="font-bold text-gray-900">--</span>
+                            <span class="text-xs text-gray-500">Cook</span>
+                        </div>
+                        <div class="w-px bg-gray-200"></div>
+                         <div class="flex flex-col items-center px-2">
+                            <span id="detail-servings" class="font-bold text-gray-900">--</span>
+                            <span class="text-xs text-gray-500">Servings</span>
+                        </div>
+                    </div>
+                    <!-- Description -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2" style="color: var(--popcat-accent);">Description</h3>
+                        <p id="detail-recipe-description" class="text-gray-700 leading-relaxed text-sm">Loading description...</p>
+                    </div>
+                    <!-- Ingredients -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2" style="color: var(--popcat-accent);">Ingredients</h3>
+                        <ul id="detail-ingredients-list" class="list-none space-y-2 text-gray-700 text-sm">
+                            <li class="text-gray-400">Loading...</li>
+                        </ul>
+                    </div>
+                    <!-- Instructions -->
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2" style="color: var(--popcat-accent);">Instructions</h3>
+                        <!-- Note: Instructions are now flex items to manually style the number pop -->
+                        <ol id="detail-instructions-list" class="list-none space-y-3 text-gray-700 text-sm">
+                            <li class="text-gray-400">Loading...</li>
+                        </ol>
+                    </div>
+                    <!-- Empty space for scrolling -->
+                    <div class="h-12"></div>
+                </div>
+            </div>
+        </div>
+        <!-- ===== NEW: Add/Edit Recipe Screen ===== -->
+        <div id="recipe-form-screen" class="screen flex flex-col bg-white">
+            <!-- Header -->
+            <header class="header">
+                <button id="cancel-form-btn" class="icon-btn" title="Cancel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <h1 id="form-title" class="header-title">Add New Recipe</h1>
+                <!-- Use btn-header-save for specific styling -->
+                <button id="save-recipe-btn" class="btn btn-header-save" disabled>Save</button>
+            </header>
+            <!-- Form Content (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <form id="recipe-form" class="space-y-4">
+                    <input type="hidden" id="recipe-id"> <!-- Used for editing later -->
+                    <div>
+                        <label for="recipe-title-input" class="form-label">Recipe Title*</label>
+                        <input type="text" id="recipe-title-input" class="form-input" placeholder="e.g., Fluffy Pancakes" required>
+                        <span id="error-recipe-title-input" class="input-error-msg"></span>
+                    </div>
+                    <div>
+                        <label for="recipe-description-input" class="form-label">Description*</label>
+                        <textarea id="recipe-description-input" class="form-textarea" rows="3" placeholder="A short, enticing description..." required></textarea>
+                        <span id="error-recipe-description-input" class="input-error-msg"></span>
+                    </div>
+                    <div>
+                        <label for="recipe-image-url-input" class="form-label">Image URL (Optional)</label>
+                        <input type="url" id="recipe-image-url-input" class="form-input" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label for="recipe-prep-time-input" class="form-label">Prep Time</label>
+                            <input type="text" id="recipe-prep-time-input" class="form-input" placeholder="10 min">
+                        </div>
+                        <div>
+                            <label for="recipe-cook-time-input" class="form-label">Cook Time</label>
+                            <input type="text" id="recipe-cook-time-input" class="form-input" placeholder="20 min">
+                        </div>
+                        <div>
+                            <label for="recipe-servings-input" class="form-label">Servings</label>
+                            <input type="number" id="recipe-servings-input" class="form-input" placeholder="4">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="recipe-ingredients-input" class="form-label">Ingredients*</label>
+                        <textarea id="recipe-ingredients-input" class="form-textarea" rows="5" placeholder="Enter each ingredient on a new line..." required></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Separate each ingredient with a new line.</p>
+                         <span id="error-recipe-ingredients-input" class="input-error-msg"></span>
+                    </div>
+                    <div>
+                        <label for="recipe-instructions-input" class="form-label">Instructions*</label>
+                        <textarea id="recipe-instructions-input" class="form-textarea" rows="8" placeholder="Step 1: Mix the flour...\nStep 2: Bake at 350°F..." required></textarea>
+                         <p class="text-xs text-gray-500 mt-1">Separate each step with a new line.</p>
+                         <span id="error-recipe-instructions-input" class="input-error-msg"></span>
+                    </div>
+                    <div>
+                        <label for="recipe-category-select" class="form-label">Category*</label>
+                        <select id="recipe-category-select" class="form-select" required>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Dinner">Dinner</option>
+                            <option value="Dessert">Dessert</option>
+                            <option value="Snack">Snack</option>
+                            <option value="Drink">Drink</option>
+                            <option value="Appetizer">Appetizer</option>
+                            <option value="Soup">Soup</option>
+                            <option value="Main Course" selected>Main Course</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center pt-2">
+                        <input id="recipe-public-toggle" type="checkbox" checked class="h-4 w-4 text-popcat-accent focus:ring-popcat-accent border-gray-300 rounded">
+                        <label for="recipe-public-toggle" class="ml-2 block text-sm text-gray-900">Make this recipe public</label>
+                        <span class="text-xs text-gray-500 ml-auto">(Private recipes saved under 'My Recipes')</span>
+                    </div>
+                    <!-- Add padding at the bottom -->
+                    <div class="h-8"></div>
+                    <!-- The Save button is in the header -->
+                </form>
+            </div>
+        </div>
+        <!-- ===== NEW: My Recipes Screen ===== -->
+        <div id="my-recipes-screen" class="screen flex flex-col bg-gray-100">
+             <!-- Header -->
+            <header class="header">
+                 <button id="my-recipes-back-btn" class="icon-btn" title="Back to Feed">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <h1 class="header-title">My Recipes</h1>
+                <div class="w-10"></div> <!-- Spacer -->
+            </header>
+            <!-- Scrollable Content Area: My Recipe cards -->
+            <div id="my-recipe-list-container" class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
+                <!-- Loading indicator -->
+                <div id="my-recipes-loading" class="flex justify-center items-center py-10">
+                    <div class="loading-spinner"></div>
+                </div>
+                <!-- Recipe cards will be inserted here by JavaScript -->
+                <p id="my-recipes-empty-state" class="text-center text-gray-500 pt-12 hidden">You haven't added any private recipes yet.</p>
+            </div>
+        </div>
+        <!-- ===== NEW: Favorites Screen ===== -->
+        <div id="favorites-screen" class="screen flex flex-col bg-gray-100">
+             <!-- Header -->
+            <header class="header">
+                 <button id="favorites-back-btn" class="icon-btn" title="Back to Feed">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <h1 class="header-title">My Favorites</h1>
+                <div class="w-10"></div> <!-- Spacer -->
+            </header>
+            <!-- NEW: Filter Bar for Favorites Screen -->
+            <div id="favorites-filter-bar" class="filter-bar">
+                 <!-- Buttons generated by JavaScript -->
+            </div>
+            <!-- Scrollable Content Area: Favorites Recipe cards -->
+            <div id="favorites-list-container" class="flex-1 overflow-y-auto px-4 pt-4 space-y-4 pb-24">
+                <!-- Loading indicator -->
+                <div id="favorites-loading" class="flex justify-center items-center py-10">
+                    <div class="loading-spinner"></div>
+                </div>
+                <!-- Recipe cards will be inserted here by JavaScript -->
+                <p id="favorites-empty-state" class="text-center text-gray-500 pt-12 hidden">You haven't favorited any public recipes yet.</p>
+            </div>
+        </div>
+        <!-- Message Box (Used instead of alert() and window.confirm()) -->
+        <div id="message-box" class="fixed inset-x-0 bottom-0 mb-4 mx-auto w-11/12 max-w-sm text-white text-center py-3 px-4 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+            <p id="message-box-text"></p>
+            <div class="confirm-buttons">
+                 <button id="confirm-yes-btn" class="ok-button btn-danger px-4 py-2 rounded-lg font-bold">Yes</button>
+                 <button id="confirm-no-btn" class="ok-button bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg font-bold">Cancel</button>
+            </div>
+        </div>
+    </div> <!-- End .phone-screen -->
+    <!-- AUDIO ELEMENT -->
+    <audio id="meow-audio" src="Meowing_Sound_Effect(256k).mp3" preload="auto" muted></audio>
+    <script type="module">
+        // --- FIREBASE SETUP AND IMPORTS ---
+        import { initializeApp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, getDocs, limit, where, orderBy, doc, setDoc, updateDoc, writeBatch, deleteDoc, arrayRemove, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"; 
+        
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-popcat-recipes-app';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+        
+        // --- FIREBASE CONFIG (Will be injected by Canvas if available) ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsYqgOqDil7gLLoTV6xcsdVqCcaH8g8Eo",
+          authDomain: "popcat-recipes-c6d5a.firebaseapp.com",
+          projectId: "popcat-recipes-c6d5a",
+          storageBucket: "popcat-recipes-c6d5a.firebasestorage.app",
+          messagingSenderId: "403714097149",
+          appId: "1:403714097149:web:02a4c4e456f0221ea82394",
+          measurementId: "G-0WM0D14018"
+        };
+
+        let app;
+        let auth;
+        let db;
+        let isAuthReady = false;
+        let currentUserId = null;
+        let currentUsername = null;
+        // GLOBAL STATE: Arrays to hold recipes
+        let publicRecipes = [];
+        let myRecipes = [];
+        let myPublicRecipes = [];
+        let userFavorites = [];
+        let currentPublicRecipeUnsubscribe = null;
+        let currentMyRecipeUnsubscribe = null;
+        let currentFavoritesUnsubscribe = null;
+        // NEW STATE: Loading sync flags
+        let hasLoadedPublic = false;
+        let hasLoadedPrivate = false;
+        // NEW STATE: Default sort order is newest first
+        let currentSort = 'date-desc';
+        let lastActiveFeed = 'main-feed';
+        let currentRecipeDetailId = null;
+        let currentCategoryFilter = 'All';
+        let currentUserPostFilter = false;
+        // RECIPE COLLECTION PATH CONSTANTS
+        const PUBLIC_RECIPE_COLLECTION_PATH = `artifacts/${appId}/public/data/recipes`;
+        const PRIVATE_RECIPE_COLLECTION_BASE = `artifacts/${appId}/users`;
+        const USER_DATA_COLLECTION = `artifacts/${appId}/users`;
+        const FAVORITES_DOCUMENT_PATH = (userId) => `${PRIVATE_RECIPE_COLLECTION_BASE}/${userId}/config/favorites`;
+        // NEW: List of all possible categories for the filter bar
+        const ALL_CATEGORIES = ["All", "My Posts", "Breakfast", "Lunch", "Dinner", "Dessert", "Snack", "Drink", "Appetizer", "Soup", "Main Course", "Other"];
+        // DOM Elements Cache (populated by cacheDOMElements)
+        const elements = {};
+        const screens = {};
+
+        // --- App Initialization and Authentication ---
+        (async () => {
+            try {
+                setLogLevel('debug');
+                
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // *** MANDATORY CANVAS SIGN-IN FOR PERSISTENCE ***
+                if (initialAuthToken) {
+                    try {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Canvas custom token sign-in successful.");
+                    } catch (e) {
+                         // Gracefully handle token mismatch error, which occurs if the token is stale or invalid.
+                        if (e.code === 'auth/custom-token-mismatch') {
+                            console.warn("Custom token mismatch detected. User will be treated as logged-out. Proceeding to login screen.");
+                        } else {
+                            throw e; // Re-throw other initialization errors
+                        }
+                    }
+                } 
+                // *** END MANDATORY CANVAS SIGN-IN ***
+                
+                // Authentication Listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // --- User is Signed In ---
+                        currentUserId = user.uid;
+                        // IMPORTANT: We assume a permanent sign-in since anonymous sign-in is removed.
+                        const isPermanentUser = user.email && !user.isAnonymous;
+                        currentUsername = user.displayName || (isPermanentUser ? user.email.split('@')[0] : 'Registered User');
+
+                        // Update drawer UI
+                        elements.drawerUsername.textContent = currentUsername; 
+                        elements.drawerUserEmail.textContent = user.email || 'No Email Provided';
+                        elements.drawerUserId.textContent = `ID: ${user.uid}`;
+                        
+                        await seedDatabaseIfEmpty();
+                        
+                        // *** FIX: Explicitly stop old listeners before starting new ones on successful login/reload ***
+                        if (currentPublicRecipeUnsubscribe) { currentPublicRecipeUnsubscribe(); currentPublicRecipeUnsubscribe = null; }
+                        if (currentMyRecipeUnsubscribe) { currentMyRecipeUnsubscribe(); currentMyRecipeUnsubscribe = null; }
+                        if (currentFavoritesUnsubscribe) { currentFavoritesUnsubscribe(); currentFavoritesUnsubscribe = null; }
+                        
+                        // Reset flags on login
+                        hasLoadedPublic = false;
+                        hasLoadedPrivate = false;
+                        
+                        // Start fresh listeners
+                        listenForPublicRecipes();
+                        listenForMyPosts();
+                        listenForFavorites();
+                        
+                        // Only auto-show main feed if coming from a loading or login screen
+                        const currentActiveScreenId = document.querySelector('.screen.active')?.id;
+                        if (currentActiveScreenId === 'login-1' || currentActiveScreenId === 'login-2' || currentActiveScreenId?.startsWith('loading-')) {
+                            window.showScreen('main-feed');
+                        }
+                    } else {
+                        // --- User is Signed Out ---
+                        // Reset all states
+                        currentUserId = null;
+                        currentUsername = null;
+                        currentUserPostFilter = false;
+                         // Reset flags on logout
+                        hasLoadedPublic = false;
+                        hasLoadedPrivate = false;
+                        // Stop ALL listeners
+                        if (currentPublicRecipeUnsubscribe) { currentPublicRecipeUnsubscribe(); currentPublicRecipeUnsubscribe = null; }
+                        if (currentMyRecipeUnsubscribe) { currentMyRecipeUnsubscribe(); currentMyRecipeUnsubscribe = null; }
+                        if (currentFavoritesUnsubscribe) { currentFavoritesUnsubscribe(); currentFavoritesUnsubscribe = null; }
+                        publicRecipes = []; myRecipes = []; myPublicRecipes = []; userFavorites = [];
+                        renderRecipeFeed(); renderMyRecipes(); renderFavorites();
+                        // Reset drawer UI
+                        elements.drawerUsername.textContent = "Guest User";
+                        elements.drawerUserEmail.textContent = "Guest User";
+                        elements.drawerUserId.textContent = "ID: Not Signed In";
+                        elements.drawerRecipeCount.textContent = "Recipes: 0";
+                        
+                        const currentActiveScreenId = document.querySelector('.screen.active')?.id;
+                        if (!currentActiveScreenId || !currentActiveScreenId.startsWith('loading-')) {
+                             window.showScreen('login-1');
+                        }
+                    }
+
+                     if (!isAuthReady) {
+                         isAuthReady = true;
+                         console.log("Auth is now ready.");
+                     }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.addEventListener('DOMContentLoaded', () => {
+                    showMessage('Initialization Error. Please refresh.', 'error');
+                });
+            }
+        })(); // IIFE closure
+        // --- END FIREBASE SETUP ---
+        // --- DOM Caching ---
+        function cacheDOMElements() {
+            // Screens
+            screens.loading1 = document.getElementById('loading-1');
+            screens.loading2 = document.getElementById('loading-2');
+            screens.loading4 = document.getElementById('loading-4');
+            screens.login1 = document.getElementById('login-1');
+            screens.login2 = document.getElementById('login-2');
+            screens.mainFeed = document.getElementById('main-feed');
+            screens.recipeDetail = document.getElementById('recipe-detail');
+            screens.recipeForm = document.getElementById('recipe-form-screen');
+            screens.myRecipes = document.getElementById('my-recipes-screen');
+            screens.favoritesScreen = document.getElementById('favorites-screen');
+            // Auth Elements
+            elements.loginForm = document.getElementById('login-form');
+            elements.loginBtn = document.getElementById('login-btn');
+            elements.anonLoginBtn = document.getElementById('anon-login-btn');
+            elements.showRegisterBtn = document.getElementById('show-register-btn');
+            elements.emailInput = document.getElementById('email-in');
+            elements.passwordInput = document.getElementById('password-in');
+            elements.authStatus = document.getElementById('login-status');
+            elements.forgotPasswordLink = document.getElementById('forgot-password-link');
+            // Register Elements
+            elements.registerForm = document.getElementById('register-form');
+            elements.registerBtn = document.getElementById('register-btn');
+            elements.showLoginBtn = document.getElementById('show-login-btn');
+            elements.regEmailInput = document.getElementById('email-up');
+            elements.regPasswordInput = document.getElementById('password-up');
+            elements.regUsernameInput = document.getElementById('username-up');
+            elements.confirmPasswordInput = document.getElementById('confirm-password-up');
+            elements.registerStatus = document.getElementById('register-status');
+            // Main Feed Elements
+            elements.recipeFeedContainer = document.getElementById('recipe-feed-container');
+            elements.feedLoadingSpinner = document.getElementById('feed-loading');
+            elements.feedEmptyState = document.getElementById('feed-empty-state');
+            elements.mainAddRecipeFab = document.getElementById('main-add-recipe-fab');
+            elements.openDrawerBtn = document.getElementById('open-drawer-btn');
+            elements.searchInput = document.getElementById('search-input');
+            elements.searchButton = document.getElementById('search-button');
+            elements.searchBarContainer = document.getElementById('search-bar-container');
+            elements.sortSelect = document.getElementById('sort-select');
+            elements.feedFilterBar = document.getElementById('feed-filter-bar');
+            elements.skeletonFeedContainer = document.getElementById('skeleton-feed-container');
+            // Recipe Detail Elements
+            elements.detailBackBtn = document.getElementById('detail-back-btn');
+            elements.detailRecipeTitleHeader = document.getElementById('detail-recipe-title-header');
+            elements.detailRecipeImage = document.getElementById('detail-recipe-image');
+            elements.detailRecipeTitle = document.getElementById('detail-recipe-title');
+            elements.detailChefAvatar = document.getElementById('detail-chef-avatar');
+            elements.detailChefName = document.getElementById('detail-chef-name');
+            elements.detailPrepTime = document.getElementById('detail-prep-time');
+            elements.detailCookTime = document.getElementById('detail-cook-time');
+            elements.detailServings = document.getElementById('detail-servings');
+            elements.detailRecipeDescription = document.getElementById('detail-recipe-description');
+            elements.detailIngredientsList = document.getElementById('detail-ingredients-list');
+            elements.detailInstructionsList = document.getElementById('detail-instructions-list');
+            elements.detailLoadingOverlay = document.getElementById('detail-loading-overlay');
+            elements.favoriteBtn = document.getElementById('favorite-btn');
+            elements.favoriteIcon = document.getElementById('favorite-icon');
+            // Drawer Elements
+            elements.drawerOverlay = document.getElementById('drawer-overlay');
+            elements.drawerMenu = document.getElementById('drawer-menu');
+            elements.drawerUserEmail = document.getElementById('drawer-user-email');
+            elements.drawerUserId = document.getElementById('drawer-user-id');
+            elements.drawerUsername = document.getElementById('drawer-username');
+            elements.drawerAddRecipeBtn = document.getElementById('drawer-add-recipe-btn');
+            elements.drawerMyRecipesBtn = document.getElementById('drawer-my-recipes-btn');
+            elements.drawerRecipeCount = document.getElementById('drawer-recipe-count');
+            // Message Box
+            elements.messageBox = document.getElementById('message-box');
+            elements.messageBoxText = document.getElementById('message-box-text');
+            elements.confirmYesBtn = document.getElementById('confirm-yes-btn');
+            elements.confirmNoBtn = document.getElementById('confirm-no-btn');
+            // Audio
+            elements.meowAudio = document.getElementById('meow-audio');
+             // --- Recipe Form Elements ---
+            elements.recipeFormScreen = document.getElementById('recipe-form-screen');
+            elements.recipeForm = document.getElementById('recipe-form');
+            elements.formTitle = document.getElementById('form-title');
+            elements.recipeIdInput = document.getElementById('recipe-id');
+            elements.recipeTitleInput = document.getElementById('recipe-title-input');
+            elements.recipeDescriptionInput = document.getElementById('recipe-description-input');
+            elements.recipeImageUrlInput = document.getElementById('recipe-image-url-input');
+            elements.recipePrepTimeInput = document.getElementById('recipe-prep-time-input');
+            elements.recipeCookTimeInput = document.getElementById('recipe-cook-time-input');
+            elements.recipeServingsInput = document.getElementById('recipe-servings-input');
+            elements.recipeIngredientsInput = document.getElementById('recipe-ingredients-input');
+            elements.recipeInstructionsInput = document.getElementById('recipe-instructions-input');
+            elements.recipeCategoryInput = document.getElementById('recipe-category-select');
+            elements.recipePublicCheckbox = document.getElementById('recipe-public-toggle');
+            elements.saveRecipeBtn = document.getElementById('save-recipe-btn');
+            elements.cancelFormBtn = document.getElementById('cancel-form-btn');
+            // --- Form Validation Inputs (Required) ---
+            elements.requiredFormInputs = [
+                elements.recipeTitleInput,
+                elements.recipeDescriptionInput,
+                elements.recipeIngredientsInput,
+                elements.recipeInstructionsInput
+            ];
+            // --- My Recipes Screen Elements ---
+            elements.myRecipesContainer = document.getElementById('my-recipe-list-container');
+            elements.myRecipesLoading = document.getElementById('my-recipes-loading');
+            elements.myRecipesEmptyState = document.getElementById('my-recipes-empty-state');
+            elements.myRecipesBackBtn = document.getElementById('my-recipes-back-btn');
+            // --- Favorites Screen Elements ---
+            elements.favoritesContainer = document.getElementById('favorites-list-container');
+            elements.favoritesLoading = document.getElementById('favorites-loading');
+            elements.favoritesEmptyState = document.getElementById('favorites-empty-state');
+            elements.favoritesBackBtn = document.getElementById('favorites-back-btn');
+            elements.favoritesFilterBar = document.getElementById('favorites-filter-bar');
+        }
+        // --- Inline Error Functions (NEW) ---
+        /**
+         * Utility to get the error span for an input ID.
+         * @param {string} inputId - The ID of the input field.
+         * @returns {HTMLElement} The error span element.
+         */
+        function getErrorSpan(inputId) {
+            return document.getElementById(`error-${inputId}`);
+        }
+        
+        /**
+         * Displays or hides an inline error message for a form field.
+         * @param {string} inputId - The ID of the input field.
+         * @param {string} message - The error message to display (or null/empty to hide).
+         */
+        function displayInlineError(inputId, message) {
+            const span = getErrorSpan(inputId);
+            if (span) {
+                span.textContent = message || '';
+                // Also apply/remove red border class to the input itself
+                const input = document.getElementById(inputId);
+                if (input) {
+                    if (message) {
+                        input.classList.add('border-red-500');
+                    } else {
+                        input.classList.remove('border-red-500');
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Clears all known inline error messages and status messages.
+         */
+        function clearAllInlineErrors() {
+             // Auth fields
+             displayInlineError('email-in', '');
+             displayInlineError('password-in', '');
+             displayInlineError('username-up', '');
+             displayInlineError('email-up', '');
+             displayInlineError('password-up', '');
+             displayInlineError('confirm-password-up', '');
+             // Recipe form fields
+             displayInlineError('recipe-title-input', '');
+             displayInlineError('recipe-description-input', '');
+             displayInlineError('recipe-ingredients-input', '');
+             displayInlineError('recipe-instructions-input', '');
+             // Clear the overall status messages too
+             if (elements.authStatus) elements.authStatus.textContent = '';
+             if (elements.registerStatus) elements.registerStatus.textContent = '';
+        }
+        // --- UI Helper Functions ---
+        /**
+         * Shows a styled message box.
+         * @param {string} msg - The message to display.
+         * @param {string} type - 'info', 'success', or 'error'.
+         */
+        window.showMessage = (msg, type = 'info') => {
+            if (!elements.messageBox || !elements.messageBoxText) return;
+            // Clear any lingering confirm mode classes/listeners
+            elements.messageBox.classList.remove('confirm', 'bg-red-600', 'bg-green-600', 'bg-gray-800', 'opacity-100');
+            elements.confirmYesBtn.onclick = null;
+            elements.confirmNoBtn.onclick = null;
+            elements.messageBoxText.textContent = msg;
+            // Set base classes and show
+            elements.messageBox.classList.add('fixed', 'inset-x-0', 'bottom-0', 'mb-4', 'mx-auto', 'w-11/12', 'max-w-sm', 'text-white', 'text-center', 'py-3', 'px-4', 'rounded-lg', 'shadow-xl', 'transition-opacity', 'duration-300', 'z-50', 'show');
+            if (type === 'error') {
+                elements.messageBox.classList.add('bg-red-600');
+            } else if (type === 'success') {
+                elements.messageBox.classList.add('bg-green-600');
+            } else {
+                elements.messageBox.classList.add('bg-gray-800');
+            }
+            // Make it visible immediately
+            elements.messageBox.classList.remove('opacity-0', 'pointer-events-none');
+            elements.messageBox.classList.add('opacity-100');
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                window.closeMessage();
+            }, 3000);
+        };
+         /**
+         * Closes the message modal. 
+         */
+         window.closeMessage = () => {
+             if (elements.messageBox) {
+                 elements.messageBox.classList.remove('show', 'opacity-100');
+                 elements.messageBox.classList.add('opacity-0', 'pointer-events-none');
+                 // Also ensure confirm buttons are hidden when closing
+                 elements.messageBox.classList.remove('confirm');
+             }
+         };
+        /**
+         * Shows a custom confirmation dialog (REPLACEMENT for window.confirm).
+         * @param {string} msg - The confirmation question.
+         * @param {function} onConfirm - Callback for 'Yes'.
+         * @param {function} onCancel - Callback for 'No'.
+         */
+        window.confirmAction = (msg, onConfirm, onCancel = () => {}) => {
+            if (!elements.messageBox || !elements.messageBoxText) return;
+            // Set up message box for confirmation
+            elements.messageBox.classList.remove('bg-red-600', 'bg-green-600', 'bg-gray-800');
+            elements.messageBox.classList.add('bg-gray-800', 'confirm');
+            elements.messageBoxText.textContent = msg;
+            // Set up buttons
+            elements.confirmYesBtn.onclick = () => {
+                window.closeMessage();
+                onConfirm();
+            };
+            elements.confirmNoBtn.onclick = () => {
+                window.closeMessage();
+                onCancel();
+            };
+            // Show it
+            elements.messageBox.classList.add('show', 'opacity-100');
+            elements.messageBox.classList.remove('opacity-0', 'pointer-events-none');
+        }
+        /**
+         * Manages which screen is visible.
+         * @param {string} screenId - The ID of the screen to show.
+         */
+        window.showScreen = (screenId) => {
+            console.log(`Navigating to screen: ${screenId}`);
+            // Clear all inline errors when navigating away from form/login screens
+            if (screenId !== 'login-1' && screenId !== 'login-2' && screenId !== 'recipe-form-screen') {
+                clearAllInlineErrors();
+            }
+            // NEW: Update last active feed
+            if (screenId === 'main-feed' || screenId === 'my-recipes-screen' || screenId === 'favorites-screen') {
+                lastActiveFeed = screenId;
+            }
+            // NEW: Reset filter when changing away from main feed or favorites
+            if (screenId !== 'main-feed') {
+                currentUserPostFilter = false;
+            }
+            if (screenId !== 'main-feed' && screenId !== 'favorites-screen') {
+                currentCategoryFilter = 'All'; 
+            }
+            Object.values(screens).forEach(screen => {
+                if (screen) {
+                    if (screen.id === screenId) {
+                        screen.style.display = 'flex';
+                        screen.classList.add('active');
+                        // Reset scroll for screens with scrollable content
+                        const contentArea = screen.querySelector('.overflow-y-auto');
+                        if (contentArea) {
+                            contentArea.scrollTop = 0;
+                        }
+                    } else {
+                        screen.style.display = 'none';
+                        screen.classList.remove('active');
+                    }
+                }
+            });
+             // Close drawer whenever switching screens
+             if (elements.drawerMenu && elements.drawerMenu.classList.contains('open')) {
+                 toggleDrawer(false);
+             }
+        };
+        /** Toggles the drawer menu */
+        window.toggleDrawer = (force) => {
+             console.log("toggleDrawer called. Force:", force);
+             if (!elements.drawerMenu || !elements.drawerOverlay) {
+                 console.error("Drawer elements not found!");
+                 return;
+             }
+            const isOpen = elements.drawerMenu.classList.contains('open');
+            let shouldOpen = (typeof force === 'boolean') ? force : !isOpen;
+            console.log("Current state:", isOpen, " | Should open:", shouldOpen);
+            if (shouldOpen) {
+                elements.drawerMenu.classList.add('open');
+                elements.drawerOverlay.classList.add('open');
+            } else {
+                elements.drawerMenu.classList.remove('open');
+                elements.drawerOverlay.classList.remove('open');
+            }
+        };
+        function getFriendlyErrorMessage(errorCode) {
+             switch (errorCode) {
+                 case 'auth/user-not-found':
+                 case 'auth/invalid-credential':
+                     return 'Invalid email or password.';
+                 case 'auth/wrong-password':
+                     return 'Incorrect password.';
+                 case 'auth/email-already-in-use':
+                     return 'Email already registered.';
+                 case 'auth/weak-password':
+                     return 'Password must be >= 6 chars.';
+                 case 'auth/invalid-email':
+                     return 'Invalid email format.';
+                 default:
+                     return 'Authentication error. Please try again.';
+             }
+         }
+        // --- Authentication Handlers ---
+         async function handleSignIn(event) {
+            event?.preventDefault();
+            clearAllInlineErrors();
+            const email = elements.emailInput.value.trim();
+            const password = elements.passwordInput.value;
+            // NEW: Inline Validation Checks
+            let hasError = false;
+
+ 	    if (auth.currentUser && auth.currentUser.email === email) {
+        	showMessage('Session restored. Navigating to main feed.', 'info');
+       		window.showScreen('main-feed');
+        	return; // Abort the redundant sign-in attempt
+    	    }
+
+            if (!email) {
+                displayInlineError('email-in', 'Email is required.');
+                hasError = true;
+            }
+
+            if (!password) {
+                displayInlineError('password-in', 'Password is required.');
+                hasError = true;
+            }
+
+            if (hasError) return;
+            showMessage('Signing in...');
+            try {
+                // Check if user is already signed in with a permanent account
+                if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                     if (auth.currentUser.email === email) {
+                         showMessage('You are already signed in.', 'info');
+                     } else {
+                         showMessage('Please sign out before signing in with a different account.', 'error');
+                     }
+                     window.showScreen('main-feed'); 
+                     return;
+                 }
+                
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged handles UI change
+                showMessage('Sign in successful!', 'success');
+                if (elements.loginForm) elements.loginForm.reset();
+            } catch (error) {
+                console.error("Login Error:", error);
+                showMessage(getFriendlyErrorMessage(error.code), 'error');
+            }
+        }
+        async function handleRegister(event) {
+            event?.preventDefault();
+            clearAllInlineErrors();
+            const email = elements.regEmailInput.value.trim();
+            const password = elements.regPasswordInput.value;
+            const confirmPassword = elements.confirmPasswordInput.value;
+            const username = elements.regUsernameInput.value.trim();
+            let hasError = false;
+            // NEW: Inline Validation Checks
+            if (!username) {
+                displayInlineError('username-up', 'Username is required.');
+                hasError = true;
+            }
+            if (!email) {
+                displayInlineError('email-up', 'Email is required.');
+                hasError = true;
+            }
+            if (!password) {
+                displayInlineError('password-up', 'Password is required.');
+                hasError = true;
+            } else if (password.length < 6) {
+                 displayInlineError('password-up', 'Password must be >= 6 chars.');
+                 hasError = true;
+            }
+            if (password !== confirmPassword) {
+                displayInlineError('confirm-password-up', 'Passwords do not match.');
+                hasError = true;
+            }
+            if (hasError) return;
+            showMessage('Creating account...');
+            try {
+                // Check if user is already signed in with a permanent account
+                 if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                     showMessage('Please sign out before creating a new account.', 'error');
+                     window.showScreen('main-feed'); 
+                     return;
+                 }
+                
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                // Update Firebase Auth profile
+                await updateProfile(user, { displayName: username });
+                // Create user profile document in Firestore
+                 const userDocRef = doc(db, `${USER_DATA_COLLECTION}/${user.uid}/profile`, 'data');
+                 await setDoc(userDocRef, {
+                     username: username,
+                     email: email,
+                     createdAt: serverTimestamp()
+                 });
+                showMessage('Account created! Signing in...', 'success');
+                // onAuthStateChanged handles UI change
+                if (elements.registerForm) elements.registerForm.reset();
+            } catch (error) {
+                console.error("Registration Error:", error);
+                 showMessage(getFriendlyErrorMessage(error.code), 'error');
+            }
+        }
+        async function handleForgotPassword() {
+             clearAllInlineErrors();
+             const email = elements.emailInput.value.trim();
+             if (!email) {
+                 displayInlineError('email-in', 'Enter your email to reset password.');
+                 return;
+             }
+             showMessage(`Sending reset link to ${email}...`);
+             try {
+                 await sendPasswordResetEmail(auth, email);
+                 showMessage('Password reset email sent (check spam too).', 'success');
+             } catch (error) {
+                 console.error("Password Reset Error:", error);
+                 showMessage(getFriendlyErrorMessage(error.code), 'error');
+             }
+         }
+        // Updated handleSignOut function
+        async function handleSignOut() {
+            toggleDrawer(false);
+            // Normal Firebase Sign Out (Check if auth exists)
+            if (!auth) return showMessage("App not initialized.", "error");
+            try {
+                showMessage('Signing out...', 'info');
+                await signOut(auth);
+                // onAuthStateChanged *should* handle the screen change,
+                // but we add an explicit call for robustness & immediate feedback.
+                console.log("Sign out successful via Firebase, explicitly showing login screen.");
+                window.showScreen('login-1');
+                showMessage('Signed out successfully.', 'success');
+            } catch (error) {
+                console.error("Sign Out Error:", error);
+                showMessage('Failed to sign out.', 'error');
+            }
+        }
+        // --- Firestore Data Functions ---
+        // --- Mock Data ---
+        const SEED_RECIPES = [
+            // Using placehold.co for reliable placeholders
+            { title: "Classic Margherita Pizza", description: "Simple and delicious, just like in Naples.", category: "Main Course", imageUrl: "https://placehold.co/400x180/FF6347/FFFFFF?text=Pizza", prepTime: "20 min", cookTime: "15 min", servings: 4, ingredients: ["Pizza dough", "Tomato sauce", "Fresh mozzarella", "Basil leaves", "Olive oil"], instructions: ["1. Preheat oven to 475°F (245°C).", "2. Roll out dough.", "3. Spread sauce, add cheese and basil.", "4. Bake for 10-12 minutes."] },
+            { title: "Creamy Tomato Soup", description: "A comforting bowl of creamy tomato soup.", category: "Soup", imageUrl: "https://placehold.co/400x180/FF7F50/FFFFFF?text=Soup", prepTime: "10 min", cookTime: "20 min", servings: 4, ingredients: ["Canned tomatoes", "Onion", "Garlic", "Vegetable broth", "Heavy cream", "Butter"], instructions: ["1. Sauté onion and garlic in butter.", "2. Add tomatoes and broth, simmer for 15 minutes.", "3. Blend until smooth.", "4. Stir in cream and heat through. Do not boil."] },
+            { title: "Spicy Tuna Crispy Rice", description: "Easy homemade sushi-inspired appetizer.", category: "Appetizer", imageUrl: "https://placehold.co/400x180/FF4500/FFFFFF?text=Sushi", prepTime: "30 min", cookTime: "15 min", servings: 4, ingredients: ["Sushi rice", "Nori", "Tuna", "Sriracha Mayo", "Avocado", "Cucumber"], instructions: ["1. Cook sushi rice. Season with vinegar.", "2. Press rice into squares and fry until crispy.", "3. Mix tuna with sriracha mayo.", "4. Top rice with tuna and avocado."] },
+            { title: "Avocado Toast Deluxe", description: "The quintessential breakfast with a twist.", category: "Breakfast", imageUrl: "https://placehold.co/400x180/9ACD32/FFFFFF?text=Toast", prepTime: "5 min", cookTime: "5 min", servings: 1, ingredients: ["Sourdough bread", "Avocado", "Feta cheese", "Red pepper flakes", "Lemon juice", "Salt"], instructions: ["1. Toast the bread.", "2. Mash avocado with lemon juice and salt.", "3. Spread on toast, sprinkle with feta and red pepper flakes."] },
+            { title: "Molten Chocolate Lava Cakes", description: "Warm, decadent chocolate cakes with a gooey center.", category: "Dessert", imageUrl: "https://placehold.co/400x180/8B4513/FFFFFF?text=Cake", prepTime: "15 min", cookTime: "12 min", servings: 2, ingredients: ["Dark chocolate", "Butter", "Eggs", "Sugar", "Flour", "Vanilla extract"], instructions: ["1. Melt chocolate and butter.", "2. Whisk eggs and sugar, fold in chocolate, then flour.", "3. Bake in ramekins until edges set."] },
+            { title: "Garlic Butter Chicken Pasta", description: "Creamy, cheesy, and utterly comforting pasta dish.", category: "Main Course", imageUrl: "https://placehold.co/400x180/F4A460/FFFFFF?text=Pasta", prepTime: "10 min", cookTime: "20 min", servings: 4, ingredients: ["Fettuccine", "Chicken breast", "Heavy cream", "Parmesan cheese", "Garlic", "Butter", "Parsley"], instructions: ["1. Cook pasta.", "2. Sauté chicken and garlic in butter.", "3. Add cream, simmer. Stir in Parmesan.", "4. Combine with pasta, garnish with parsley."] },
+            { title: "Tropical Mango Smoothie", description: "A healthy and refreshing smoothie to brighten your day.", category: "Drink", imageUrl: "https://placehold.co/400x180/FFD700/FFFFFF?text=Smoothie", prepTime: "5 min", cookTime: "0 min", servings: 1, ingredients: ["Frozen mango chunks", "Banana", "Greek yogurt", "Orange juice", "Honey (optional)"], instructions: ["1. Add all ingredients to a blender.", "2. Blend until smooth.", "3. Serve immediately."] },
+            { title: "Quick Black Bean Tacos", description: "Vegetarian tacos, quick, easy, and flavorful.", category: "Main Course", imageUrl: "https://placehold.co/400x180/20B2AA/FFFFFF?text=Tacos", prepTime: "10 min", cookTime: "10 min", servings: 4, ingredients: ["Black beans", "Corn", "Red onion", "Cilantro", "Lime juice", "Taco shells", "Avocado"], instructions: ["1. Rinse and drain beans and corn.", "2. Mix with chopped onion, cilantro, and lime juice.", "3. Warm taco shells.", "4. Fill shells with bean mixture and top with avocado."] },
+            { title: "Zesty Lemon Bars", description: "Tangy and sweet lemon bars with a shortbread crust.", category: "Dessert", imageUrl: "https://placehold.co/400x180/FFFACD/333333?text=Bars", prepTime: "20 min", cookTime: "30 min", servings: 12, ingredients: ["Flour", "Butter", "Sugar", "Eggs", "Lemon juice", "Lemon zest", "Powdered sugar"], instructions: ["1. Make shortbread crust and bake.", "2. Whisk eggs, sugar, lemon juice, zest, and flour.", "3. Pour filling over crust and bake again.", "4. Cool and dust with powdered sugar."] },
+            { title: "Caprese Salad Skewers", description: "A simple, elegant appetizer for any gathering.", category: "Appetizer", imageUrl: "https://placehold.co/400x180/90EE90/FFFFFF?text=Skewers", prepTime: "15 min", cookTime: "0 min", servings: 6, ingredients: ["Cherry tomatoes", "Fresh mozzarella balls (bocconcini)", "Fresh basil leaves", "Balsamic glaze", "Olive oil"], instructions: ["1. Thread tomatoes, mozzarella, and basil onto small skewers.", "2. Arrange on a platter.", "3. Drizzle with olive oil and balsamic glaze."] }
+        ];
+        const seedDatabaseIfEmpty = async () => {
+            // Check if seeding is necessary only if NOT using admin bypass
+            if (!db || !isAuthReady || !currentUserId) return; 
+            const recipesColRef = collection(db, PUBLIC_RECIPE_COLLECTION_PATH);
+            const q = query(recipesColRef, limit(1));
+            try {
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    console.log("Public recipes empty. Seeding...");
+                    showMessage('Setting up initial recipes...', 'info');
+                    const batch = writeBatch(db);
+                    SEED_RECIPES.forEach(recipe => {
+                        const newRecipeRef = doc(collection(db, PUBLIC_RECIPE_COLLECTION_PATH));
+                        batch.set(newRecipeRef, {
+                            ...recipe,
+                            createdAt: serverTimestamp(),
+                            authorId: "PopCat_Seed_Bot",
+                            authorName: recipe.chef || "PopCat Team",
+                            isPublic: true
+                        });
+                    });
+                    await batch.commit();
+                    console.log(`Seeded ${SEED_RECIPES.length} recipes.`);
+                    showMessage('Initial recipes ready!', 'success');
+                } else {
+                    console.log("Database already contains recipes.");
+                }
+            } catch (e) {
+                console.error("Error seeding database: ", e);
+                showMessage('Error setting up recipes.', 'error');
+            }
+        };
+        const listenForPublicRecipes = () => {
+            if (!db || !isAuthReady) return console.warn("DB not ready for public listener.");
+            // If listener is already running, avoid attaching a new one.
+            if (currentPublicRecipeUnsubscribe) {
+                 console.log("Public recipe listener already active.");
+                 renderRecipeFeed();
+                 return;
+            }
+            // [MODIFIED] Show skeleton when starting the listener for the first time
+            renderSkeletonFeed();
+            if (elements.feedEmptyState) elements.feedEmptyState.classList.add('hidden');
+            const recipesQuery = query(collection(db, PUBLIC_RECIPE_COLLECTION_PATH));
+            console.log("Attaching Firestore listener for PUBLIC recipes...");
+            currentPublicRecipeUnsubscribe = onSnapshot(recipesQuery, (snapshot) => {
+                publicRecipes = snapshot.docs.map(doc => ({ id: doc.id, createdAt: doc.data().createdAt, ...doc.data() }));
+                // NEW: Filter my own public posts
+                myPublicRecipes = publicRecipes.filter(r => r.authorId === currentUserId);
+                // NEW: Calculate and update the user's public recipe count in the drawer
+                updateUserRecipeCount();
+                // [MODIFIED] Hide skeleton/spinner
+                if (elements.skeletonFeedContainer) elements.skeletonFeedContainer.classList.add('hidden'); 
+                if (elements.feedLoadingSpinner) elements.feedLoadingSpinner.style.display = 'none';
+		renderRecipeFeed();
+                
+                hasLoadedPublic = true; // Set flag
+                checkAndRenderMyPosts(); // Check sync state
+		 const currentActiveScreenId = document.querySelector('.screen.active')?.id;
+                 console.log(`Public Listener update: ${publicRecipes.length} recipes loaded.`);
+            }, (error) => {
+                console.error("Firestore public listener error:", error);
+                if (elements.skeletonFeedContainer) elements.skeletonFeedContainer.classList.add('hidden');
+                if (elements.feedLoadingSpinner) elements.feedLoadingSpinner.style.display = 'none';
+                if (elements.feedEmptyState) {
+                    elements.feedEmptyState.textContent = "Error loading recipes.";
+                    elements.feedEmptyState.classList.remove('hidden');
+                }
+                 showMessage('Error fetching public recipes.', 'error');
+            });
+        };
+        // NEW FUNCTION: Calculates and updates the drawer count
+        function updateUserRecipeCount() {
+            if (!currentUserId || !elements.drawerRecipeCount) {
+                elements.drawerRecipeCount.textContent = "Recipes: 0";
+                return;
+            }
+            // Count public recipes where authorId matches currentUserId
+            const count = myPublicRecipes.length;
+            elements.drawerRecipeCount.textContent = `Recipes: ${count}`;
+        }
+        // --- UPDATED: Function to listen for ALL My Posts (Private + Public) ---
+        const listenForMyPosts = () => {
+            if (!db || !isAuthReady || !currentUserId) {
+                console.warn("Skipping My Recipes listener: DB not ready or user not logged in.");
+                myRecipes = [];
+                renderMyRecipes();
+                 // Stop any previous listener if user logs out or becomes admin bypass
+                 if (currentMyRecipeUnsubscribe) { currentMyRecipeUnsubscribe(); currentMyRecipeUnsubscribe = null; }
+                return;
+            }
+            // If listener is already running, avoid attaching a new one.
+            if (currentMyRecipeUnsubscribe) {
+                 console.log("My Posts listener already active.");
+                 renderMyPosts(); 
+                 return; 
+            }
+            if (elements.myRecipesLoading) elements.myRecipesLoading.style.display = 'flex';
+            if (elements.myRecipesEmptyState) elements.myRecipesEmptyState.classList.add('hidden');
+            const myRecipesCollectionPath = `${PRIVATE_RECIPE_COLLECTION_BASE}/${currentUserId}/recipes`;
+            const myRecipesQuery = query(collection(db, myRecipesCollectionPath), orderBy("createdAt", "desc")); 
+            console.log(`Attaching Firestore listener for PRIVATE recipes at: ${myRecipesCollectionPath}`);
+            currentMyRecipeUnsubscribe = onSnapshot(myRecipesQuery, (snapshot) => {
+                myRecipes = snapshot.docs.map(doc => ({ id: doc.id, createdAt: doc.data().createdAt, ...doc.data() }));
+                
+                hasLoadedPrivate = true; // Set flag
+                checkAndRenderMyPosts(); // Check sync state
+                
+                if (elements.myRecipesLoading) elements.myRecipesLoading.style.display = 'none';
+                 console.log(`My Private Recipes Listener update: ${myRecipes.length} recipes loaded.`);
+            }, (error) => {
+                console.error("Firestore 'My Recipes' listener error:", error);
+                 if (elements.myRecipesLoading) elements.myRecipesLoading.style.display = 'none';
+                 if (elements.myRecipesEmptyState) {
+                    elements.myRecipesEmptyState.textContent = "Error loading your recipes.";
+                    elements.myRecipesEmptyState.classList.remove('hidden');
+                 }
+                 showMessage('Error fetching your private recipes.', 'error');
+            });
+        };
+        
+        // NEW SYNC FUNCTION: Renders My Posts only after both lists are loaded
+        function checkAndRenderMyPosts() {
+            if (hasLoadedPublic && hasLoadedPrivate) {
+                console.log("Public and Private lists synced. Rendering My Recipes dashboard.");
+                renderMyRecipes();
+            }
+        }
+        
+        // NEW FUNCTION: Listen for the user's favorite recipe IDs
+        const listenForFavorites = () => {
+             if (!db || !isAuthReady || !currentUserId) {
+                 if (currentFavoritesUnsubscribe) { currentFavoritesUnsubscribe(); currentFavoritesUnsubscribe = null; }
+                 userFavorites = [];
+                 renderFavorites();
+                 return;
+             }
+             if (currentFavoritesUnsubscribe) return console.log("Favorites listener already active.");
+             const favDocRef = doc(db, FAVORITES_DOCUMENT_PATH(currentUserId));
+             if (elements.favoritesLoading) elements.favoritesLoading.style.display = 'flex';
+             console.log("Attaching Firestore listener for FAVORITES...");
+             currentFavoritesUnsubscribe = onSnapshot(favDocRef, (docSnapshot) => {
+                 if (docSnapshot.exists() && docSnapshot.data().recipeIds) {
+                     // The document contains an array of recipe IDs
+                     userFavorites = docSnapshot.data().recipeIds;
+                 } else {
+                     userFavorites = [];
+                 }
+                 console.log(`Favorites Listener update: ${userFavorites.length} favorites loaded.`);
+                 // Update the current detail screen favorite status (if visible)
+                 if (currentRecipeDetailId) {
+                     updateFavoriteButtonUI(currentRecipeDetailId);
+                 }
+                 // If the favorites screen is open, re-render it
+                 if (document.getElementById('favorites-screen').classList.contains('active')) {
+                     renderFavorites();
+                 }
+             }, (error) => {
+                 console.error("Firestore 'Favorites' listener error:", error);
+                 showMessage('Error fetching favorites list.', 'error');
+             });
+         };
+         
+         // NEW FUNCTION: Toggles a recipe as favorite/unfavorite
+         const toggleFavorite = async (recipeId) => {
+             if (!currentUserId) {
+                 showMessage('Please sign in to save favorites.', 'error');
+                 return;
+             }
+             const isFavorited = userFavorites.includes(recipeId);
+             const favDocRef = doc(db, FAVORITES_DOCUMENT_PATH(currentUserId));
+             try {
+                 if (isFavorited) {
+                     // Remove from favorites
+                     await updateDoc(favDocRef, {
+                         recipeIds: arrayRemove(recipeId)
+                     });
+                     showMessage('Removed from favorites.', 'info');
+                 } else {
+                     // Add to favorites. Use setDoc with merge:true to ensure the document exists, 
+                     // and arrayUnion to add the ID without overwriting the whole array.
+                     await setDoc(favDocRef, {
+                         recipeIds: arrayUnion(recipeId)
+                     }, { merge: true });
+                     showMessage('Added to favorites!', 'success');
+                 }
+             } catch (error) {
+                 console.error("Favorite toggle error:", error);
+                 showMessage('Failed to update favorites.', 'error');
+             }
+         };
+         
+         // NEW FUNCTION: Updates the detail button visual state
+         const updateFavoriteButtonUI = (recipeId) => {
+             if (!elements.favoriteBtn || !elements.favoriteIcon) return;
+             // Ensure it's not disabled if a user is logged in
+             elements.favoriteBtn.disabled = !currentUserId;
+             elements.favoriteIcon.setAttribute('onclick', `toggleFavorite('${recipeId}')`);
+             if (currentUserId) {
+                 const isFavorited = userFavorites.includes(recipeId);
+                 if (isFavorited) {
+                     elements.favoriteIcon.setAttribute('fill', 'var(--popcat-accent)');
+                     elements.favoriteIcon.classList.remove('text-gray-500', 'hover:text-red-500');
+                     elements.favoriteIcon.classList.add('text-red-600');
+                 } else {
+                     elements.favoriteIcon.setAttribute('fill', 'none');
+                     elements.favoriteIcon.classList.add('text-gray-500', 'hover:text-red-500');
+                     elements.favoriteIcon.classList.remove('text-red-600');
+                 }
+                 elements.favoriteBtn.classList.toggle('cursor-pointer', true);
+             } else {
+                  elements.favoriteIcon.setAttribute('fill', 'none');
+                  elements.favoriteIcon.classList.remove('text-red-600');
+                  elements.favoriteIcon.classList.add('text-gray-500');
+                  elements.favoriteBtn.classList.toggle('cursor-pointer', false);
+                  elements.favoriteBtn.disabled = true;
+             }
+         };
+        // NEW FUNCTION: Converts Prep/Cook time string (e.g., "10 min", "1 hr 15 min") to minutes for comparison
+        function timeStringToMinutes(timeStr) {
+            if (!timeStr || typeof timeStr !== 'string') return Infinity;
+            timeStr = timeStr.toLowerCase().replace(/and/g, '').trim();
+            if (timeStr === '--' || timeStr === '') return Infinity;
+            let totalMinutes = 0;
+            const parts = timeStr.split(/\s+/); 
+            for (let i = 0; i < parts.length; i += 2) {
+                const value = parseFloat(parts[i]);
+                const unit = parts[i + 1];
+                if (!isNaN(value) && unit) {
+                    if (unit.startsWith('hr')) {
+                        totalMinutes += value * 60;
+                    } else if (unit.startsWith('min')) {
+                        totalMinutes += value;
+                    }
+                } else if (!isNaN(value)) {
+                    // Assume minutes if unit is missing and it's a number
+                     totalMinutes += value;
+                }
+            }
+            return totalMinutes;
+        }
+        // NEW FUNCTION: Sorts the array based on the currentSort state
+        function applySorting(recipes) {
+            switch (currentSort) {
+                case 'date-desc':
+                    // Sort by newest first (Firestore Timestamp objects or objects with milliseconds)
+                    return recipes.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                case 'date-asc':
+                    // Sort by oldest first
+                    return recipes.sort((a, b) => (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0));
+                case 'title-asc':
+                    // Sort by title A-Z
+                    return recipes.sort((a, b) => a.title.localeCompare(b.title));
+                case 'prep-asc':
+                    // Sort by shortest prep time first
+                    return recipes.sort((a, b) => {
+                         const timeA = timeStringToMinutes(a.prepTime);
+                         const timeB = timeStringToMinutes(b.prepTime);
+                         return timeA - timeB;
+                    });
+                default:
+                    return recipes;
+            }
+        }
+        
+        // UPDATED FUNCTION: Handles the click on a filter button
+        window.handleCategoryFilter = (category, targetScreen) => {
+            if (category === "My Posts") {
+                 // Toggle the boolean filter state for My Posts
+                 currentUserPostFilter = !currentUserPostFilter;
+                 currentCategoryFilter = 'All';
+            } else {
+                 // Set the category filter state
+                 currentCategoryFilter = category;
+                 currentUserPostFilter = false;
+            }
+            // Re-render the button bar to show the active state(s)
+            if (targetScreen === 'main-feed') {
+                 renderFilterButtons(elements.feedFilterBar, 'main-feed');
+                 renderRecipeFeed();
+            } else if (targetScreen === 'favorites-screen') {
+                 renderFilterButtons(elements.favoritesFilterBar, 'favorites-screen');
+                 renderFavorites();
+            }
+        };
+        
+        // UPDATED FUNCTION: Generates and attaches the filter buttons
+        const renderFilterButtons = (container, targetScreen) => {
+             if (!container) return;
+             container.innerHTML = '';
+             const categories = targetScreen === 'main-feed' 
+                 ? ALL_CATEGORIES
+                 : ALL_CATEGORIES.filter(c => c !== "My Posts");
+                 
+             categories.forEach(category => {
+                 let isActive = false;
+                 if (category === "All" && currentCategoryFilter === "All" && !currentUserPostFilter) {
+                     isActive = true;
+                 } else if (category === "My Posts" && currentUserPostFilter) {
+                     isActive = true;
+                 } else if (category === currentCategoryFilter && category !== "All" && !currentUserPostFilter) {
+                     isActive = true;
+                 }
+                 const button = document.createElement('button');
+                 button.textContent = category;
+                 button.className = `filter-button ${isActive ? 'active' : ''}`;
+                 button.onclick = () => window.handleCategoryFilter(category, targetScreen);
+                 container.appendChild(button);
+             });
+        };
+        // --- NEW: Skeleton Card Generation (for Feature #6) ---
+        function getSkeletonCardHTML() {
+             return `
+                 <div class="recipe-card animate-pulse p-4">
+                     <div class="h-40 bg-gray-300 rounded-lg mb-4"></div>
+                     <div class="h-5 bg-gray-300 rounded w-3/4 mb-3"></div>
+                     <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                     <div class="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+                     <div class="flex justify-between items-center">
+                         <div class="h-3 bg-gray-300 rounded w-1/4"></div>
+                         <div class="h-3 bg-gray-300 rounded w-1/6"></div>
+                     </div>
+                 </div>
+             `;
+         }
+         
+         function renderSkeletonFeed() {
+             if (!elements.recipeFeedContainer) return;
+             elements.recipeFeedContainer.innerHTML = '';
+             if (elements.feedEmptyState) elements.feedEmptyState.classList.add('hidden');
+             // Show 5 skeleton cards directly in the feed container
+             for (let i = 0; i < 5; i++) {
+                 elements.recipeFeedContainer.insertAdjacentHTML('beforeend', getSkeletonCardHTML());
+             }
+         }
+        // --- UI Rendering ---
+        const renderRecipeFeed = () => { // Renders PUBLIC recipes
+            if (!elements.recipeFeedContainer) return;
+            // 1. Initial filter button render (must be done before filtering)
+            if (elements.feedFilterBar.children.length === 0) {
+                 renderFilterButtons(elements.feedFilterBar, 'main-feed');
+            }
+            // 2. Apply Filters (My Posts first, then Category)
+            let recipesToFilter = publicRecipes;
+            if (currentUserPostFilter && currentUserId) {
+                 recipesToFilter = recipesToFilter.filter(recipe => recipe.authorId === currentUserId);
+                 // When My Posts is active, the category filter is ignored, but set to 'All'
+            } else if (currentCategoryFilter !== 'All') {
+                 recipesToFilter = recipesToFilter.filter(recipe => recipe.category === currentCategoryFilter);
+            }
+            // 3. Apply Search Filter
+            const searchTerm = elements.searchInput ? elements.searchInput.value.trim().toLowerCase() : '';
+            let filteredRecipes = recipesToFilter.filter(recipe => {
+                if (!searchTerm) return true;
+                // Standardize fields to lowercase strings for case-insensitive searching
+                const title = recipe.title?.toLowerCase() || '';
+                const description = recipe.description?.toLowerCase() || '';
+                const category = recipe.category?.toLowerCase() || '';
+                const authorName = recipe.authorName?.toLowerCase() || '';
+                // Ingredients and instructions are arrays of strings
+                const ingredientsString = (recipe.ingredients || []).join(' ').toLowerCase();
+                const instructionsString = (recipe.instructions || []).join(' ').toLowerCase();
+                return title.includes(searchTerm) ||
+                       description.includes(searchTerm) ||
+                       category.includes(searchTerm) ||
+                       authorName.includes(searchTerm) ||
+                       ingredientsString.includes(searchTerm) ||
+                       instructionsString.includes(searchTerm);
+            });
+            // 4. Apply Sorting
+            const sortedRecipes = applySorting(filteredRecipes);
+            elements.recipeFeedContainer.innerHTML = '';
+             if (elements.feedLoadingSpinner) elements.feedLoadingSpinner.style.display = 'none';
+             // [NEW] Ensure skeleton is hidden if we have results
+             if (elements.skeletonFeedContainer) elements.skeletonFeedContainer.classList.add('hidden');
+            if (sortedRecipes.length > 0) {
+                if (elements.feedEmptyState) elements.feedEmptyState.classList.add('hidden');
+                sortedRecipes.forEach(recipe => {
+                    elements.recipeFeedContainer.insertAdjacentHTML('beforeend', createRecipeCardHTML(recipe, false));
+                });
+            } else {
+                if (elements.feedEmptyState) {
+                     const filterMessage = currentUserPostFilter ? ` that you posted` : 
+                                            (currentCategoryFilter !== 'All' ? ` for ${currentCategoryFilter}` : '');
+                     const searchMessage = searchTerm ? ` matching "${searchTerm}"` : '';
+                     elements.feedEmptyState.textContent = `No recipes found${searchMessage}${filterMessage}.`; 
+                     elements.feedEmptyState.classList.remove('hidden');
+                }
+            }
+            elements.recipeFeedContainer.insertAdjacentHTML('beforeend', '<div class="h-20"></div>');
+        };
+        // --- UPDATED: Function to render MY (Private + Public) Recipes ---
+        const renderMyRecipes = () => {
+            if (!elements.myRecipesContainer) return;
+            // 1. Combine my private recipes and my public recipes
+            const allMyPosts = [...myRecipes, ...myPublicRecipes]; 
+            // 2. Sort the combined list (using the default sorting for now: newest first)
+            const sortedMyPosts = allMyPosts.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            elements.myRecipesContainer.innerHTML = '';
+            if (elements.myRecipesLoading) elements.myRecipesLoading.style.display = 'none';
+            if (sortedMyPosts.length > 0) {
+                if (elements.myRecipesEmptyState) elements.myRecipesEmptyState.classList.add('hidden');
+                sortedMyPosts.forEach(recipe => {
+                    // Reuse createRecipeCardHTML. isMyRecipe flag is now always true because this is the user's dashboard.
+                    elements.myRecipesContainer.insertAdjacentHTML('beforeend', createRecipeCardHTML(recipe, true));
+                });
+            } else {
+                if (elements.myRecipesEmptyState) {
+                     elements.myRecipesEmptyState.textContent = "You haven't added any recipes (public or private) yet.";
+                     elements.myRecipesEmptyState.classList.remove('hidden');
+                }
+            }
+             elements.myRecipesContainer.insertAdjacentHTML('beforeend', '<div class="h-20"></div>');
+        };
+        
+        // NEW FUNCTION: Renders the favorites screen - UPDATED with Category Filter
+        const renderFavorites = () => {
+            if (!elements.favoritesContainer) return;
+             // 1. Initial filter button render (if not already done)
+            if (elements.favoritesFilterBar.children.length === 0) {
+                 renderFilterButtons(elements.favoritesFilterBar, 'favorites-screen');
+            }
+            // 2. Filter public recipes by Favorites ID list
+            let favoritesToFilter = publicRecipes.filter(recipe => userFavorites.includes(recipe.id));
+            // 3. Apply Category Filter
+            if (currentCategoryFilter !== 'All') {
+                 favoritesToFilter = favoritesToFilter.filter(recipe => recipe.category === currentCategoryFilter);
+            }
+            // 4. Sort by date desc (newest favorited first)
+            const favoritesToRender = favoritesToFilter
+                .sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            elements.favoritesContainer.innerHTML = '';
+            if (elements.favoritesLoading) elements.favoritesLoading.style.display = 'none';
+            if (favoritesToRender.length > 0) {
+                if (elements.favoritesEmptyState) elements.favoritesEmptyState.classList.add('hidden');
+                favoritesToRender.forEach(recipe => {
+                    elements.favoritesContainer.insertAdjacentHTML('beforeend', createRecipeCardHTML(recipe, false));
+                });
+            } else {
+                 if (elements.favoritesEmptyState) {
+                     const filterMessage = currentCategoryFilter !== 'All' ? ` in the ${currentCategoryFilter} category` : '';
+                     elements.favoritesEmptyState.textContent = `You haven't favorited any public recipes${filterMessage} yet.`;
+                     elements.favoritesEmptyState.classList.remove('hidden');
+                 }
+            }
+            elements.favoritesContainer.insertAdjacentHTML('beforeend', '<div class="h-20"></div>');
+        };
+         // UPDATED createRecipeCardHTML to include optional actions and theme styling
+         const createRecipeCardHTML = (recipe, isMyRecipe = false) => {
+            const imageUrl = recipe.imageUrl || `https://placehold.co/400x180/${getColorForCategory(recipe.category)}/FFFFFF?text=${encodeURIComponent(recipe.title?.['0'] || '?')}`;
+            const authorName = recipe.authorName || 'Anonymous';
+            const descriptionSnippet = recipe.description ? (recipe.description.length > 80 ? recipe.description.substring(0, 80) + '...' : recipe.description) : 'No description.';
+            // --- NEW: Action buttons for 'My Recipes' ---
+            // IMPORTANT: Pass recipe.isPublic into the handlers
+            const actionButtonsHTML = recipe.authorId === currentUserId ? `
+                <div class="recipe-card-actions">
+                    <button class="action-btn edit-btn" onclick="editRecipe('${recipe.id}', ${recipe.isPublic}, event)">Edit</button>
+                    <button class="action-btn delete-btn" onclick="confirmDeleteRecipe('${recipe.id}', ${recipe.isPublic}, event)">Delete</button>
+                </div>
+            ` : '';
+            // Use data-id for detail view click, separate buttons handle edit/delete
+            return `
+                <div class="recipe-card" data-id="${recipe.id}">
+                    <img src="${imageUrl}" alt="${recipe.title}" class="recipe-image" onerror="this.src='https://placehold.co/400x180/cccccc/333333?text=Img+Error'; this.onerror=null;">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-1">
+                             <!-- Applied .recipe-title styling for accent color -->
+                             <h2 class="recipe-title flex-1 mr-2">${recipe.title || 'Untitled Recipe'}</h2>
+                             ${recipe.category ? `<span class="recipe-tag flex-shrink-0">${recipe.category}</span>` : ''}
+                        </div>
+                        <p class="recipe-description mb-3 text-gray-700">${descriptionSnippet}</p>
+                        <!-- Applied .recipe-author styling for secondary color -->
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="recipe-author">${authorName}</span>
+                            <span class="recipe-metadata-time">${recipe.prepTime || ''}${recipe.prepTime && recipe.cookTime ? ' | ' : ''}${recipe.cookTime || ''}</span>
+                        </div>
+                        ${actionButtonsHTML}
+                    </div>
+                </div>
+            `;
+        };
+        function getColorForCategory(category = '') {
+            let hash = 0;
+            for (let i = 0; i < category.length; i++) { hash = category.charCodeAt(i) + ((hash << 5) - hash); }
+            const color = [0, 0, 0];
+            for (let i = 0; i < 3; i++) { color[i] = (hash >> (i * 8)) & 0xFF; }
+            // Ensure reasonable brightness/saturation - simplistic approach
+            const brightness = (color[0]*0.299 + color[1]*0.587 + color[2]*0.114);
+            if(brightness < 128) { color[0]+=30; color[1]+=30; color[2]+=30; } // Lighten dark colors
+            return color.map(c => Math.min(255, Math.max(0, c)).toString(16).padStart(2, '0')).join('');
+        }
+        // UPDATED: Now includes loading spinner logic and interactive checklist
+        function showRecipeDetail(recipeId) {
+            // 1. Show Loading State Immediately
+            window.showScreen('recipe-detail');
+            screens.recipeDetail.classList.add('loading'); 
+            // Reset and clear content before loading starts
+            elements.detailIngredientsList.innerHTML = '<li class="text-gray-400">Loading ingredients...</li>';
+            elements.detailInstructionsList.innerHTML = '<li class="text-gray-400">Loading instructions...</li>';
+            elements.detailRecipeTitleHeader.textContent = 'Loading...';
+            elements.detailRecipeTitle.textContent = 'Loading Recipe...';
+            elements.detailRecipeDescription.textContent = '...';
+             // Simulate delay to show spinner if data loads instantly (good UX practice)
+            setTimeout(() => {
+                // Find the recipe in the correct array
+                 let recipe = publicRecipes.find(r => r.id === recipeId);
+                 if (!recipe) {
+                     recipe = myRecipes.find(r => r.id === recipeId); // Check private recipes
+                 }
+                if (!recipe) {
+                    screens.recipeDetail.classList.remove('loading');
+                    return showMessage('Recipe details not found.', 'error');
+                }
+                // 2. Render Details
+                currentRecipeDetailId = recipeId;
+                updateFavoriteButtonUI(recipeId); 
+                elements.detailRecipeTitleHeader.textContent = recipe.title;
+                elements.detailRecipeTitle.textContent = recipe.title;
+                elements.detailChefName.textContent = recipe.authorName || 'Anonymous';
+                elements.detailChefAvatar.src = recipe.chefAvatar || `https://placehold.co/30x30/${getColorForCategory(recipe.authorName)}/FFFFFF?text=${(recipe.authorName || '?')[0]}`;
+                elements.detailChefAvatar.style.borderColor = recipe.isPublic ? 'var(--popcat-accent)' : 'var(--popcat-secondary)'; 
+                elements.detailRecipeDescription.textContent = recipe.description || 'No description.';
+                elements.detailRecipeImage.src = recipe.imageUrl || `https://placehold.co/400x224/${getColorForCategory(recipe.category)}/FFFFFF?text=${(recipe.title || '?')[0]}`;
+                elements.detailRecipeImage.onerror = () => { elements.detailRecipeImage.src = 'https://placehold.co/400x224/cccccc/333333?text=No+Image'; };
+                elements.detailPrepTime.textContent = recipe.prepTime || '--';
+                elements.detailCookTime.textContent = recipe.cookTime || '--';
+                elements.detailServings.textContent = recipe.servings || '--';
+                const ingredients = recipe.ingredients || [];
+                // NEW: Render Ingredients as interactive checklist
+                elements.detailIngredientsList.innerHTML = ingredients.length > 0
+                    ? ingredients.map((item, index) => `
+                        <li class="flex items-center ingredient-item">
+                            <input type="checkbox" id="ingredient-${index}" class="ingredient-checkbox">
+                            <label for="ingredient-${index}" class="flex-1">${item.trim()}</label>
+                        </li>
+                    `).join('')
+                    : '<li>No ingredients listed.</li>';
+                const instructions = recipe.instructions || [];
+                // Render Instructions as numbered list
+                elements.detailInstructionsList.innerHTML = instructions.length > 0
+                    ? instructions.map((step, index) => `<li class="flex items-start"><span class="font-bold mr-2" style="color: var(--popcat-accent);">${index + 1}.</span><span class="flex-1">${step.trim()}</span></li>`).join('')
+                    : '<li>No instructions provided.</li>';
+                // 3. Hide Loading State
+                screens.recipeDetail.classList.remove('loading');
+            }, 200);
+        };
+        // --- Recipe Form Functions ---
+        function showRecipeForm() {
+            if (!currentUserId) {
+                 showMessage('Please sign in to add recipes.', 'error');
+                 return;
+            }
+            toggleDrawer(false);
+            if (elements.recipeForm) elements.recipeForm.reset();
+            if (elements.formTitle) elements.formTitle.textContent = 'Add New Recipe';
+            if (elements.recipeIdInput) elements.recipeIdInput.value = '';
+            if (elements.recipePublicCheckbox) {
+                elements.recipePublicCheckbox.checked = true;
+                elements.recipePublicCheckbox.disabled = false;
+            }
+            clearAllInlineErrors();
+            validateForm();
+            window.showScreen('recipe-form-screen');
+        };
+        const validateForm = () => {
+             if (!elements.requiredFormInputs || !elements.saveRecipeBtn) return;
+             // Only used for the header button's disabled state, not for inline errors
+             const isValid = elements.requiredFormInputs.every(input => input && input.value.trim() !== '');
+             elements.saveRecipeBtn.disabled = !isValid;
+             // Do NOT clear errors here, let the input listener handle it
+        };
+        const handleSaveRecipe = async (event) => {
+             event?.preventDefault();
+             if (!currentUserId) {
+                 return showMessage('Sign in required.', 'error');
+             }
+             const title = elements.recipeTitleInput.value.trim();
+             const description = elements.recipeDescriptionInput.value.trim();
+             const ingredients = elements.recipeIngredientsInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+             const instructions = elements.recipeInstructionsInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+             const imageUrl = elements.recipeImageUrlInput.value.trim();
+             const prepTime = elements.recipePrepTimeInput.value.trim();
+             const cookTime = elements.recipeCookTimeInput.value.trim();
+             const servings = elements.recipeServingsInput.value.trim();
+             const category = elements.recipeCategoryInput.value;
+             const isPublic = elements.recipePublicCheckbox.checked;
+             const recipeId = elements.recipeIdInput.value;
+             
+             // NEW: Inline Validation Checks on Save attempt
+             let hasError = false;
+             clearAllInlineErrors();
+             
+             if (!title) {
+                 displayInlineError('recipe-title-input', 'Recipe title is required.');
+                 hasError = true;
+             }
+             if (!description) {
+                 displayInlineError('recipe-description-input', 'Description is required.');
+                 hasError = true;
+             }
+             if (ingredients.length === 0) {
+                 displayInlineError('recipe-ingredients-input', 'Ingredients are required (one per line).');
+                 hasError = true;
+             }
+             if (instructions.length === 0) {
+                 displayInlineError('recipe-instructions-input', 'Instructions are required (one step per line).');
+                 hasError = true;
+             }
+             
+             if (hasError) {
+                 elements.saveRecipeBtn.disabled = false;
+                 elements.saveRecipeBtn.textContent = 'Save';
+                 return showMessage('Please fill all required fields.', 'error');
+             }
+             // End NEW: Inline Validation Checks
+             
+             elements.saveRecipeBtn.disabled = true;
+             elements.saveRecipeBtn.textContent = 'Saving...';
+             
+             // --- FIX: Declare finalIsPublic here for both ADD and UPDATE logic ---
+             let finalIsPublic;
+             const recipeData = {
+                 title, description, ingredients, instructions, category,
+                 authorId: currentUserId,
+                 authorName: currentUsername,
+                 updatedAt: serverTimestamp()
+             };
+             if (imageUrl) recipeData.imageUrl = imageUrl;
+             if (prepTime) recipeData.prepTime = prepTime;
+             if (cookTime) recipeData.cookTime = cookTime;
+             const servingsNum = parseInt(servings);
+             if (!isNaN(servingsNum)) recipeData.servings = servingsNum;
+             else if (servings) recipeData.servings = servings;
+             try {
+                 if (recipeId) { // UPDATE logic
+                     // 1. Get the non-changeable 'isPublic' status from the form checkbox
+                     finalIsPublic = elements.recipePublicCheckbox.checked;
+                     recipeData.isPublic = finalIsPublic;
+                     // 2. Determine the correct collection path based on the fixed 'isPublic' status
+                     const updatePath = finalIsPublic
+                         ? PUBLIC_RECIPE_COLLECTION_PATH
+                         : `${PRIVATE_RECIPE_COLLECTION_BASE}/${currentUserId}/recipes`;
+                     const docRef = doc(db, updatePath, recipeId);
+                     await setDoc(docRef, recipeData, { merge: true });
+                     showMessage('Recipe updated!', 'success');
+            	} else { // ADD NEW logic
+                     finalIsPublic = isPublic;
+                     recipeData.isPublic = finalIsPublic;
+                     recipeData.createdAt = serverTimestamp();
+                     
+                     const collectionPath = finalIsPublic
+                         ? PUBLIC_RECIPE_COLLECTION_PATH
+                         : `${PRIVATE_RECIPE_COLLECTION_BASE}/${currentUserId}/recipes`;
+                     await addDoc(collection(db, collectionPath), recipeData);
+                     showMessage('Recipe added!', 'success');
+                 }
+                 
+                 // Go back to the appropriate feed
+                 window.showScreen(finalIsPublic ? 'main-feed' : 'my-recipes-screen');
+                 if (elements.recipeForm) elements.recipeForm.reset();
+             } catch (error) {
+                 console.error("Save Recipe Error:", error);
+                 showMessage(`Save failed: ${error.message}`, 'error');
+             } finally {
+                 if (elements.saveRecipeBtn) {
+                     elements.saveRecipeBtn.disabled = false;
+                     elements.saveRecipeBtn.textContent = 'Save';
+                     validateForm();
+                 }
+             }
+         };
+         // --- NEW: Functions for Edit/Delete ---
+         // UPDATED: Added isPublic argument
+         window.editRecipe = (recipeId, isPublic, event) => {
+             event.stopPropagation();
+             console.log("Edit recipe requested:", recipeId, "Is Public:", isPublic);
+             
+             // Find the recipe in the correct collection array
+             const recipe = isPublic 
+                 ? publicRecipes.find(r => r.id === recipeId) 
+                 : myRecipes.find(r => r.id === recipeId);
+                 
+             if (!recipe) {
+                 return showMessage("Error: Could not find this recipe to edit.", "error");
+             }
+             if (recipe.authorId !== currentUserId) {
+                 return showMessage("Error: You can only edit your own recipes.", "error");
+             }
+             // Populate the form
+             elements.formTitle.textContent = 'Edit Recipe';
+             elements.recipeIdInput.value = recipe.id;
+             elements.recipeTitleInput.value = recipe.title || '';
+             elements.recipeDescriptionInput.value = recipe.description || '';
+             elements.recipeImageUrlInput.value = recipe.imageUrl || '';
+             elements.recipePrepTimeInput.value = recipe.prepTime || '';
+             elements.recipeCookTimeInput.value = recipe.cookTime || '';
+             elements.recipeServingsInput.value = recipe.servings || '';
+             elements.recipeCategoryInput.value = recipe.category || 'Other';
+             
+             // Set public toggle and disable it (status cannot be changed during edit for simplicity)
+             elements.recipePublicCheckbox.checked = recipe.isPublic;
+             elements.recipePublicCheckbox.disabled = true;
+             
+             // Convert arrays back to newline-separated strings
+             elements.recipeIngredientsInput.value = (recipe.ingredients || []).join('\n');
+             elements.recipeInstructionsInput.value = (recipe.instructions || []).join('\n');
+             
+             clearAllInlineErrors();
+             validateForm();
+             window.showScreen('recipe-form-screen');
+         };
+         
+         // UPDATED: Added isPublic argument
+         window.confirmDeleteRecipe = async (recipeId, isPublic, event) => {
+             event.stopPropagation();
+             
+             const recipe = isPublic 
+                 ? publicRecipes.find(r => r.id === recipeId) 
+                 : myRecipes.find(r => r.id === recipeId);
+                 
+             if (!recipe) return showMessage("Error: Recipe not found.", "error");
+             if (recipe.authorId !== currentUserId) return showMessage("Error: You can only delete your own recipes.", "error");
+             
+             window.confirmAction(
+                 `Are you sure you want to delete "${recipe.title}"? (This is permanent)`,
+                 // On Confirm (Yes)
+                 () => {
+                     console.log("User confirmed deletion for:", recipeId);
+                     deleteRecipe(recipe.id, isPublic);
+                 },
+                 // On Cancel (No) - Do nothing on cancel
+                 () => {
+                     console.log("User cancelled deletion.");
+                     showMessage("Deletion cancelled.", "info");
+                 }
+             );
+         };
+         
+         // Actual delete logic
+         async function deleteRecipe(recipeId, isPublic) {
+             if (!currentUserId) return showMessage("Not logged in.", "error");
+             // Determine the correct collection path based on the isPublic flag
+             const collectionPath = isPublic
+                 ? PUBLIC_RECIPE_COLLECTION_PATH
+                 : `${PRIVATE_RECIPE_COLLECTION_BASE}/${currentUserId}/recipes`;
+             
+             const docRef = doc(db, collectionPath, recipeId);
+             try {
+                 await deleteDoc(docRef);
+                 showMessage("Recipe deleted successfully.", "success");
+                 // The onSnapshot listener will automatically update the UI
+             } catch (error) {
+                 console.error("Delete Recipe Error:", error);
+                 showMessage(`Error deleting recipe: ${error.message}`, "error");
+             }
+         }
+         
+         // NEW FUNCTION: Handles the click on the favorites drawer item
+         function handleFavoritesClick() {
+             toggleDrawer(false);
+             if (!currentUserId) {
+                 showMessage("Please sign in to view favorites.", "error");
+                 return;
+             }
+             // Ensure the filter bar is rendered and reset the filter state
+             currentCategoryFilter = 'All'; 
+             currentUserPostFilter = false;
+             renderFilterButtons(elements.favoritesFilterBar, 'favorites-screen');
+             renderFavorites();
+             showScreen('favorites-screen');
+         }
+         
+         // NEW FUNCTION: Global function to toggle favorite from detail screen
+         window.toggleRecipeFavorite = () => {
+             if (currentRecipeDetailId) {
+                 toggleFavorite(currentRecipeDetailId);
+             } else {
+                 showMessage("No recipe selected.", "error");
+             }
+         };
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            // Auth Forms & Navigation
+            if (elements.loginBtn) elements.loginBtn.addEventListener('click', handleSignIn);
+            if (elements.registerBtn) elements.registerBtn.addEventListener('click', handleRegister);
+            if (elements.showRegisterBtn) elements.showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showScreen('login-2'); clearAllInlineErrors(); });
+            if (elements.showLoginBtn) elements.showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showScreen('login-1'); clearAllInlineErrors(); });
+            if (elements.forgotPasswordLink) elements.forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); handleForgotPassword(); });
+            // Drawer
+            if (elements.openDrawerBtn) {
+                 elements.openDrawerBtn.addEventListener('click', () => toggleDrawer(true));
+             }
+            // Drawer close handled by overlay click in HTML
+            // Main Feed
+            if (elements.searchInput) elements.searchInput.addEventListener('input', renderRecipeFeed);
+             if (elements.searchButton) {
+                 elements.searchButton.addEventListener('click', () => {
+                     elements.searchBarContainer.classList.toggle('hidden');
+                     if (!elements.searchBarContainer.classList.contains('hidden')) {
+                         elements.searchInput.focus();
+                     }
+                 });
+             }
+            if (elements.mainAddRecipeFab) elements.mainAddRecipeFab.addEventListener('click', showRecipeForm);
+            
+            // NEW: Sort Dropdown Listener
+            if (elements.sortSelect) {
+                 elements.sortSelect.addEventListener('change', (e) => {
+                     currentSort = e.target.value;
+                     renderRecipeFeed();
+                 });
+             }
+            // Recipe Detail
+            if (elements.detailBackBtn) elements.detailBackBtn.addEventListener('click', () => {
+                 // Go back to the *last* active feed screen
+                 showScreen(lastActiveFeed);
+            });
+            // NEW: Favorite Button Listener
+            if (elements.favoriteBtn) {
+                elements.favoriteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (elements.favoriteBtn.disabled) {
+                        showMessage('Please sign in to favorite recipes.', 'error');
+                    } else {
+                         toggleFavorite(currentRecipeDetailId);
+                    }
+                });
+            }
+             // Dynamic card clicks using event delegation (for detail view)
+            if (elements.recipeFeedContainer) {
+                 elements.recipeFeedContainer.addEventListener('click', (e) => {
+                     // Check if the click target is NOT an edit or delete button
+                     if (!e.target.closest('.action-btn')) {
+                         const card = e.target.closest('.recipe-card[data-id]');
+                         if (card) {
+                             showRecipeDetail(card.dataset.id);
+                         }
+                     }
+                 });
+            }
+             // Event delegation for My Recipes screen card clicks (for detail view)
+             if (elements.myRecipesContainer) {
+                 elements.myRecipesContainer.addEventListener('click', (e) => {
+                     // Check if the click target is NOT an edit or delete button
+                     if (!e.target.closest('.action-btn')) {
+                         const card = e.target.closest('.recipe-card[data-id]');
+                         if (card) {
+                             showRecipeDetail(card.dataset.id);
+                         }
+                     }
+                 });
+             }
+            // Recipe Form
+             if (elements.cancelFormBtn) elements.cancelFormBtn.addEventListener('click', () => {
+                 // Go back to the *last* active feed screen
+                  showScreen(lastActiveFeed);
+             });
+             if (elements.saveRecipeBtn) elements.saveRecipeBtn.addEventListener('click', handleSaveRecipe);
+             // Live validation for required form inputs
+             elements.requiredFormInputs?.forEach(input => {
+                 input?.addEventListener('input', validateForm);
+                 // NEW: Clear inline error when user starts typing
+                 input?.addEventListener('input', () => displayInlineError(input.id, ''));
+             });
+             // Also validate when category changes
+              if (elements.recipeCategoryInput) elements.recipeCategoryInput.addEventListener('change', validateForm);
+            // Drawer Navigation Buttons
+            if (elements.drawerAddRecipeBtn) elements.drawerAddRecipeBtn.addEventListener('click', showRecipeForm);
+            if (elements.drawerMyRecipesBtn) {
+                 elements.drawerMyRecipesBtn.addEventListener('click', () => {
+                     if (!currentUserId) {
+                         showMessage("Please sign in with a real account to view 'My Recipes'.", "error");
+                     } else {
+                         toggleDrawer(false);
+                         showScreen('my-recipes-screen');
+                     }
+                 });
+             }
+             // NEW: Favorites Drawer Button
+             if (document.querySelector('.drawer-item:nth-child(4)')) {
+                 document.querySelector('.drawer-item:nth-child(4)').addEventListener('click', handleFavoritesClick);
+             }
+             // My Recipes Screen Back Button
+             if(elements.myRecipesBackBtn) {
+                 elements.myRecipesBackBtn.addEventListener('click', () => showScreen('main-feed'));
+             }
+             // NEW: Favorites Screen Back Button
+             if(elements.favoritesBackBtn) {
+                 elements.favoritesBackBtn.addEventListener('click', () => showScreen('main-feed'));
+             }
+        }
+        // --- App Initialization on DOM Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+             // Cache DOM elements first
+            cacheDOMElements();
+            // Set up all event listeners
+            setupEventListeners();
+            // Show initial loading screen
+            window.showScreen('loading-1');
+            // Start the loading sequence only after caching and listeners are set
+            startLoadingSequence();
+        });
+        // --- Loading Sequence (MODIFIED TO ALWAYS SHOW LOGIN) ---
+        const ANIMATION_DURATION = 350;
+        function startLoadingSequence() {
+             console.log("Starting loading animation sequence...");
+             window.showScreen('loading-1');
+             setTimeout(() => {
+                 window.showScreen('loading-2');
+                 setTimeout(() => {
+                     window.showScreen('loading-4');
+                     if (elements.meowAudio) {
+                         elements.meowAudio.muted = false;
+                         elements.meowAudio.play().catch(e => console.warn("Audio play failed:", e));
+                     }
+                     setTimeout(() => {
+                         // Check if the user is ALREADY signed in from the Canvas token restore
+                         const targetScreen = auth.currentUser ? 'main-feed' : 'login-1';
+                         console.log(`Loading sequence finished. Showing screen: ${targetScreen}.`);
+			 window.showScreen(targetScreen);
+                     }, ANIMATION_DURATION);
+                 }, ANIMATION_DURATION);
+             }, ANIMATION_DURATION);
+        }
+        // --- Make necessary functions globally accessible for inline handlers ---
+        // (Only expose functions explicitly called by HTML onclick attributes)
+        window.handleSignOut = handleSignOut;
+        window.toggleDrawer = toggleDrawer;
+        window.showScreen = showScreen;
+        window.closeMessage = closeMessage;
+        window.confirmAction = confirmAction;
+        window.editRecipe = editRecipe;
+        window.confirmDeleteRecipe = confirmDeleteRecipe;
+        window.toggleFavorite = toggleFavorite;
+        window.handleFavoritesClick = handleFavoritesClick;
+    </script>
+</body>
+</html>
