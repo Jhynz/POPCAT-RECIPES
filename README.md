@@ -82,3 +82,8 @@ The application is currently set up with a specific Firebase configuration. To u
 
 ## License 
 This project is open-source and available for personal and educational use.
+
+
+
+## Author's Note
+The code is yet to be optimized as this was made with the intention of utilizing GeminiAI 2.4 capabilities in app development.
